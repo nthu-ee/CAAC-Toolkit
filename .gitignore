@@ -1,7 +1,7 @@
 .DS_Store
 __pycache__
 
-crawler_*
+crawler_*/
 
 *.7z
 *.zip

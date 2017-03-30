@@ -47,7 +47,7 @@ departmentMap = {
     # ...
 }
 results = {
-    # 准考證號: [ 錄取系所ID, ... ]
+    # '准考證號': [ '系所編號', ... ],
     # ...
 }
 
@@ -90,15 +90,7 @@ if args.departmentIds:
         filter(len, args.departmentIds.split(','))
     ))
 
-    cursor = conn.execute('''
-        SELECT admissionId
-        FROM qualified
-        WHERE departmentId IN ({})
-    '''.format("'" + "','".join(departmentIds) + "'"))
-
-    admissionIds = [ result[0] for result in cursor.fetchall() ]
-
-    result = lookup_db.lookupByAdmissionIds(conn, admissionIds)
+    result = lookup_db.lookupByDepartmentIds(conn, departmentIds)
     results.update(result)
 
 conn.close()
@@ -111,10 +103,10 @@ if os.path.isfile(resultFilepath):
 with open(resultFilepath, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
     writer.writerow([
-        '學測准考證號',
+        '准考證號',
         '系所編號',
-        '大學名稱',
-        '大學系所',
+        '校名',
+        '系所',
     ])
     writer.writerow([]) # separator
     for admissionId, departmentIds in results.items():
