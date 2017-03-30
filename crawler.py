@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'libs'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
-from caac_crawler import caac_crawler
+from crawler_caac import crawler_caac
 
 YEAR_BEGIN = 1911
 
@@ -26,5 +26,5 @@ args = parser.parse_args()
 
 year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
 
-crawler = caac_crawler(year)
+crawler = crawler_caac(year)
 crawler.run()
