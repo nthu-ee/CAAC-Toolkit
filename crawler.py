@@ -2,6 +2,7 @@ import argparse
 import datetime
 import os
 import sys
+import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'libs'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
@@ -26,5 +27,12 @@ args = parser.parse_args()
 
 year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
 
+t_start = time.time()
+
+# let's do the job
 crawler = crawler_caac(year)
 crawler.run()
+
+t_end = time.time()
+
+print('[Done] It takes {} seconds.'.format(t_end - t_start))
