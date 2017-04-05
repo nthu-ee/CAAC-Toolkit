@@ -1,9 +1,9 @@
 import argparse
-import csv
 import datetime
 import os
 import sqlite3
 import sys
+import collections
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'libs'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
@@ -34,6 +34,11 @@ parser.add_argument(
     default='',
     help='Department IDs that are going to be looked up. (separate by commas)',
 )
+parser.add_argument(
+    '--output',
+    default='result.csv',
+    help='The file to output results. (.csv file)',
+)
 args = parser.parse_args()
 
 year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
@@ -52,7 +57,7 @@ results = {
 }
 
 dbFilepath = os.path.join('crawler_{}'.format(year), 'sqlite3.db')
-resultFilepath = os.path.join('result.csv')
+resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.csv' else args.output + '.csv'
 
 if not os.path.isfile(dbFilepath):
     raise Exception('DB file does not exist: {}'.format(dbFilepath))
@@ -95,29 +100,14 @@ if args.departmentIds:
 
 conn.close()
 
+# sort the result dict with admissionIds (ascending)
+results = collections.OrderedDict(sorted(results.items()))
+
 # delete the old CSV file
 if os.path.isfile(resultFilepath):
     os.remove(resultFilepath)
 
 # write result to a CSV file
-with open(resultFilepath, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-    writer.writerow([
-        '准考證號',
-        '系所編號',
-        '校名',
-        '系所',
-    ])
-    writer.writerow([]) # separator
-    for admissionId, departmentIds in results.items():
-        for departmentId in departmentIds:
-            universityId = departmentId[:3]
-            writer.writerow([
-                admissionId,
-                departmentId,
-                universityMap[universityId],
-                departmentMap[departmentId],
-            ])
-        writer.writerow([]) # separator
+lookup_db.writeOutResult(resultFilepath, universityMap, departmentMap, results)
 
 print(results)

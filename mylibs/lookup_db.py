@@ -1,3 +1,6 @@
+import csv
+
+
 class lookup_db():
 
     @staticmethod
@@ -31,3 +34,25 @@ class lookup_db():
         admissionIds = [ result[0] for result in cursor.fetchall() ]
 
         return lookup_db.lookupByAdmissionIds(dbHandle, admissionIds)
+
+    @staticmethod
+    def writeOutResult(outputFile, universityMap, departmentMap, lookupResult):
+        with open(outputFile, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+            writer.writerow([
+                '准考證號',
+                '系所編號',
+                '校名',
+                '系所',
+            ])
+            writer.writerow([]) # separator
+            for admissionId, departmentIds in lookupResult.items():
+                for departmentId in departmentIds:
+                    universityId = departmentId[:3]
+                    writer.writerow([
+                        admissionId,
+                        departmentId,
+                        universityMap[universityId],
+                        departmentMap[departmentId],
+                    ])
+                writer.writerow([]) # separator
