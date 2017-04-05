@@ -120,6 +120,7 @@ try:
         universityMap,
         departmentMap,
         results,
+        args,
     )
 except:
     raise Exception('Unknown option: --outputFormat={}'.format(args.outputFormat))

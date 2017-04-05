@@ -36,7 +36,7 @@ class lookup_db():
         return lookup_db.lookupByAdmissionIds(dbHandle, admissionIds)
 
     @staticmethod
-    def writeOutResult(outputFile, universityMap, departmentMap, lookupResult):
+    def writeOutResult(outputFile, universityMap, departmentMap, lookupResult, args):
         with open(outputFile, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             writer.writerow([
@@ -58,7 +58,34 @@ class lookup_db():
                 writer.writerow([]) # separator
 
     @staticmethod
-    def writeOutResultNthuEe(outputFile, universityMap, departmentMap, lookupResult):
+    def writeOutResultNthuEe(outputFile, universityMap, departmentMap, lookupResult, args):
+
+        def nthuSort(departmentId):
+            universityId = departmentId[:3]
+
+            if '清華大學' in universityMap[universityId]:
+                if '電機工程' in departmentMap[departmentId]:
+                    return '9' * 6 # 清大電機 should be the last one
+                else:
+                    return '9' * 3 + departmentId[-3:]
+            else:
+                return departmentId
+
+        ArgsDepartmentIds = list(set( # list unique
+            filter(len, args.departmentIds.split(','))
+        ))
+
+        # let's do some post processes
+        # - we only want to show departments that are not in args.departmentIds
+        # - we want 清大電機 to be shown as the last one
+        postProcessedResults = {}
+        for admissionId, departmentIds in lookupResult.items():
+            # remove departments which are in args.departmentIds
+            departmentIds = list(set(departmentIds) - set(ArgsDepartmentIds))
+            # put 清大電機 to the last one
+            departmentIds.sort(key=nthuSort)
+            postProcessedResults[admissionId] = departmentIds
+
         with open(outputFile, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
             writer.writerow([
@@ -66,7 +93,7 @@ class lookup_db():
                 '校名與系所',
             ])
             writer.writerow([]) # separator
-            for admissionId, departmentIds in lookupResult.items():
+            for admissionId, departmentIds in postProcessedResults.items():
                 applieds = [
                     # '國立臺灣大學 化學工程學系',
                     # ...
