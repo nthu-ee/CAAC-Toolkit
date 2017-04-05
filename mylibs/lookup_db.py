@@ -56,3 +56,30 @@ class lookup_db():
                         departmentMap[departmentId],
                     ])
                 writer.writerow([]) # separator
+
+    @staticmethod
+    def writeOutResultNthuEe(outputFile, universityMap, departmentMap, lookupResult):
+        with open(outputFile, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+            writer.writerow([
+                '准考證號',
+                '校名與系所',
+            ])
+            writer.writerow([]) # separator
+            for admissionId, departmentIds in lookupResult.items():
+                applieds = [
+                    # '國立臺灣大學 化學工程學系',
+                    # ...
+                ]
+                for departmentId in departmentIds:
+                    universityId = departmentId[:3]
+                    applieds.append(
+                        "{} {}".format(
+                            universityMap[universityId],
+                            departmentMap[departmentId],
+                        )
+                    )
+                writer.writerow([
+                    admissionId,
+                    *applieds,
+                ])

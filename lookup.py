@@ -39,6 +39,11 @@ parser.add_argument(
     default='result.csv',
     help='The file to output results. (.csv file)',
 )
+parser.add_argument(
+    '--outputFormat',
+    default='',
+    help='Leave it blank or "NthuEe"',
+)
 args = parser.parse_args()
 
 year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
@@ -108,6 +113,15 @@ if os.path.isfile(resultFilepath):
     os.remove(resultFilepath)
 
 # write result to a CSV file
-lookup_db.writeOutResult(resultFilepath, universityMap, departmentMap, results)
+writeOutMethod = 'writeOutResult{}'.format(args.outputFormat)
+try:
+    getattr(lookup_db, writeOutMethod)(
+        resultFilepath,
+        universityMap,
+        departmentMap,
+        results,
+    )
+except:
+    raise Exception('Unknown option: --outputFormat={}'.format(args.outputFormat))
 
 print(results)
