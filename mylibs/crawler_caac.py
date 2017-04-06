@@ -54,7 +54,7 @@ class crawler_caac():
     def fetchAndSaveCollegeList(self):
         departmentLists = []
 
-        content = self.fetchAndSavePage(self.collegeListUrl, log=True)
+        content = self.fetchAndSavePage(self.collegeListUrl, overwrite=False, log=True)
         links = pq(content)('a')
 
         for link in links.items():
@@ -68,7 +68,7 @@ class crawler_caac():
         departmentApplys = []
 
         for filepath in filepaths:
-            content = self.fetchAndSavePage(self.projectBaseUrl + filepath, log=True)
+            content = self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
             links = pq(content)('a')
             for link in links.items():
                 href = link.attr('href')
@@ -82,18 +82,26 @@ class crawler_caac():
 
     def fetchAndSaveDepartmentApplys(self, filepaths):
         for filepath in filepaths:
-            self.fetchAndSavePage(self.projectBaseUrl + filepath, log=True)
+            self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
 
         print('[crawler_caac] Finish crawling.')
 
-    def fetchAndSavePage(self, url, log=False):
+    def fetchAndSavePage(self, url, overwrite=True, log=False):
         """ fetch and save a page depending on its URL """
+
+        filepath = url.replace(self.projectBaseUrl, '')
+        filepathAbsolute = os.path.join(self.resultDir, filepath)
+        if not overwrite and os.path.isfile(filepathAbsolute):
+            with open(filepathAbsolute, 'r', encoding='utf-8') as f:
+                if log is True:
+                    print('[Local] ' + url)
+                return f.read()
 
         if log is True:
             print('[Fetching] ' + url)
+
         content = self.getPage(url)
-        filepath = url.replace(self.projectBaseUrl, '')
-        self.writeFile(os.path.join(self.resultDir, filepath), content)
+        self.writeFile(filepathAbsolute, content)
         return content
 
     def generateDb(self):
