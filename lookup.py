@@ -5,7 +5,6 @@ import sqlite3
 import sys
 import collections
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'libs'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
 from lookup_db import lookup_db
 

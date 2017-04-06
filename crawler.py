@@ -4,7 +4,6 @@ import os
 import sys
 import time
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'libs'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
 from crawler_caac import crawler_caac
 
