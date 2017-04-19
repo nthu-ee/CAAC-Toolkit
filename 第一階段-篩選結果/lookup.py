@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
 from lookup_db import lookup_db
 
 YEAR_BEGIN = 1911
+YEAR_CURRENT = datetime.datetime.now().year - YEAR_BEGIN
 
 # change the working directory
 try:
@@ -20,8 +21,8 @@ parser = argparse.ArgumentParser(description='A crawler for CAAC website.')
 parser.add_argument(
     '--year',
     type=int,
-    default=datetime.datetime.now().year - YEAR_BEGIN,
-    help='The year of data to be crawled. (ex: 2017 or 106 is the same)',
+    default=YEAR_CURRENT,
+    help='The year of data to be processed. (ex: 2017 or 106 is the same)',
 )
 parser.add_argument(
     '--admissionIds',

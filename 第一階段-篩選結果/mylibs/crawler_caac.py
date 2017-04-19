@@ -207,7 +207,9 @@ class crawler_caac():
         while True:
             # try to get page content
             try:
-                req = urllib.request.Request(*args)
+                req = urllib.request.Request(*args, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.68 Safari/537.36',
+                })
                 with urllib.request.urlopen(req) as resp:
                     return resp.read().decode('utf-8')
             # somehow we cannot get the page content
