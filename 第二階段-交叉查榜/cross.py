@@ -34,7 +34,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--output',
-    default='result.csv',
+    default=datetime.datetime.now().strftime('result_%Y%m%d_%H%M%S.csv'),
     help='The file to output results. (.csv file)',
 )
 args = parser.parse_args()
