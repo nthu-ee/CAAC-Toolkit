@@ -1,6 +1,4 @@
 from pyquery import PyQuery as pq
-import codecs
-import csv
 import os
 import re
 import sqlite3
@@ -77,23 +75,13 @@ def getPage(*args):
         time.sleep(1)
 
 
-def writeFile(filename, content='', mode='w', codec='utf-8'):
-    """ write content to an external file """
-
-    # create directory if the directory does exist yet
-    filedir = os.path.dirname(filename)
-    if filedir and not os.path.isdir(filedir):
-        os.makedirs(filedir, exist_ok=True)
-
-    with codecs.open(filename, mode, codec) as f:
-        f.write(content)
-
-
 def parseFreshmanTw(content=''):
-    batchResults = {
+    peopleResults = {
         # '准考證號': {
         #     '系所編號': 'primary',
+        #     ...
         # },
+        # ...
     }
 
     content = content.replace('\r', '').replace('\n', '') # sanitization
@@ -103,10 +91,9 @@ def parseFreshmanTw(content=''):
     personResult = {}
     for tr in rows.items():
         findAdmissionId = re.search(r'\b[0-9]{8}\b', tr.html())
-
         isFirstRow = findAdmissionId is not None
         if isFirstRow:
-            batchResults.update(personResult)
+            peopleResults.update(personResult)
             admissionId = findAdmissionId.group(0)
             personResult = {
                 admissionId: {},
@@ -114,11 +101,10 @@ def parseFreshmanTw(content=''):
         department = tr('td a').attr('href').strip('./ ')
         applied = tr('td span').text().strip()
         applied = normalizeApplicationC2E(applied)
-
         personResult[admissionId][department] = applied
-    batchResults.update(personResult)
+    peopleResults.update(personResult)
 
-    return batchResults
+    return peopleResults
 
 
 def normalizeApplicationC2E(chinese):
@@ -133,7 +119,7 @@ def normalizeApplicationC2E(chinese):
         order = '?' if order is None else order.group(0)
         return 'spare-{}'.format(order)
     # 尚未放榜
-    if '未' in chinese and '榜' in chinese:
+    if '未' in chinese and '放榜' in chinese:
         return 'unannounced'
     # 被刷掉了?
     return 'unapplied'
