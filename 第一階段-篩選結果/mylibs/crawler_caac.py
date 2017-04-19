@@ -1,8 +1,10 @@
+from project_config import project_config
 from pyquery import PyQuery as pq
 import codecs
 import os
 import re
 import sqlite3
+import sys
 import time
 import urllib
 
@@ -20,7 +22,7 @@ class crawler_caac():
     def __init__(self, year):
         self.year = year
         self.baseUrl = self.baseUrl_f.format(year)
-        self.resultDir = 'crawler_{}'.format(self.year)
+        self.resultDir = project_config.resultDir.format(year).format(self.year)
 
     def run(self):
         # prepare the result directory

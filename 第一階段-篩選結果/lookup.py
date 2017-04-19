@@ -1,11 +1,13 @@
 import argparse
+import collections
 import datetime
 import os
 import sqlite3
 import sys
-import collections
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
+from project_config import project_config
 from lookup_db import lookup_db
 
 YEAR_BEGIN = 1911
@@ -61,7 +63,7 @@ results = {
     # ...
 }
 
-dbFilepath = os.path.join('crawler_{}'.format(year), 'sqlite3.db')
+dbFilepath = os.path.join(project_config.resultDir.format(year), 'sqlite3.db')
 resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.csv' else args.output + '.csv'
 
 if not os.path.isfile(dbFilepath):

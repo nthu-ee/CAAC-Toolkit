@@ -4,8 +4,10 @@ import os
 import sys
 import time
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
 from crawler_caac import crawler_caac
+from project_config import project_config
 
 YEAR_BEGIN = 1911
 YEAR_CURRENT = datetime.datetime.now().year - YEAR_BEGIN
