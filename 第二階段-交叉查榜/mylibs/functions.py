@@ -46,12 +46,14 @@ def batch(iterable, n=1):
     for ndx in range(0, l, n):
         yield iterable[ndx:min(ndx + n, l)]
 
+
 def canBeInt(s):
     try:
         int(s)
         return True
     except ValueError:
         return False
+
 
 def getPage(*args):
     """ get a certain web page """
@@ -74,6 +76,7 @@ def getPage(*args):
         # fail to fetch the page, let's sleep for a while
         time.sleep(1)
 
+
 def writeFile(filename, content='', mode='w', codec='utf-8'):
     """ write content to an external file """
 
@@ -84,6 +87,7 @@ def writeFile(filename, content='', mode='w', codec='utf-8'):
 
     with codecs.open(filename, mode, codec) as f:
         f.write(content)
+
 
 def parseFreshmanTw(content=''):
     batchResults = {
@@ -131,6 +135,7 @@ def normalizeApplicationC2E(chinese):
         return 'unannounced'
     # 被刷掉了?
     return 'unapplied'
+
 
 def normalizeApplicationE2C(english):
     # 正取

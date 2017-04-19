@@ -84,7 +84,7 @@ with open(resultFilepath, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
     writer.writerow([
         '准考證號',
-        '校名與系所',
+        '校系與結果',
     ])
     writer.writerow([]) # separator
     for admissionId in admissionIds:

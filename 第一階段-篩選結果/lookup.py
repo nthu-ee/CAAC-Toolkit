@@ -19,7 +19,7 @@ try:
 except:
     pass
 
-parser = argparse.ArgumentParser(description='A crawler for CAAC website.')
+parser = argparse.ArgumentParser(description='A database lookup utility for CAAC website.')
 parser.add_argument(
     '--year',
     type=int,
