@@ -27,6 +27,12 @@ parser.add_argument(
     help='The year of data to be processed. (ex: 2017 or 106 is the same)',
 )
 parser.add_argument(
+    '--batchSize',
+    type=int,
+    default=10,
+    help='Fetch how many people from the internet at once?',
+)
+parser.add_argument(
     '--output',
     default='result.csv',
     help='The file to output results. (.csv file)',
@@ -85,9 +91,7 @@ with open('admission_ids.txt', 'r') as f:
     admissionIdsUnique = list(set(admissionIds))
 
 apiUrlFormat = 'https://freshman.tw/cross/106/numbers/{}'
-batchSize = 10 # fetch how many people at once?
-
-for admissionId_batch in functions.batch(admissionIdsUnique, batchSize):
+for admissionId_batch in functions.batch(admissionIdsUnique, args.batchSize):
     apiUrl = apiUrlFormat.format(','.join(admissionId_batch))
     content = functions.getPage(apiUrl)
     batchResults = functions.parseFreshmanTw(content)

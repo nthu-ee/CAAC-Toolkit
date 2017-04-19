@@ -124,12 +124,14 @@ def parseFreshmanTw(content=''):
 def normalizeApplicationC2E(chinese):
     # 正取
     if '正' in chinese:
-        return 'primary'
+        order = re.search(r'[0-9]+', chinese)
+        order = '?' if order is None else order.group(0)
+        return 'primary-{}'.format(order)
     # 備取
     if '備' in chinese:
-        spareCnt = re.search(r'[0-9]+', chinese)
-        spareCnt = '?' if spareCnt is None else spareCnt.group(0)
-        return 'spare-{}'.format(spareCnt)
+        order = re.search(r'[0-9]+', chinese)
+        order = '?' if order is None else order.group(0)
+        return 'spare-{}'.format(order)
     # 尚未放榜
     if '未' in chinese and '榜' in chinese:
         return 'unannounced'
@@ -139,11 +141,16 @@ def normalizeApplicationC2E(chinese):
 
 def normalizeApplicationE2C(english):
     # 正取
-    if 'primary' == english:
-        return '正取'
+    if 'primary' in english:
+        state = english.split('-')
+        if state[1] == '?':
+            state[1] = ''
+        return '正{}'.format(state[1])
     # 備取
     if 'spare' in english:
         state = english.split('-')
+        if state[1] == '?':
+            state[1] = ''
         return '備{}'.format(state[1])
     # 尚未放榜
     if 'unannounced' == english:
