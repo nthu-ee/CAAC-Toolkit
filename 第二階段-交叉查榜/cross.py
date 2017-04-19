@@ -56,6 +56,21 @@ results = {
     # ...
 }
 
+
+def nthuSort(departmentId):
+    global universityMap, departmentMap
+
+    universityId = departmentId[:3]
+
+    if '清華大學' in universityMap[universityId]:
+        if '電機工程' in departmentMap[departmentId]:
+            return '9' * 6 # 清大電機 should be the last one
+        else:
+            return '9' * 3 + departmentId[-3:]
+    else:
+        return departmentId
+
+
 t_start = time.time()
 
 db = functions.loadDb(dbFilepath)
@@ -88,11 +103,11 @@ with open(resultFilepath, 'w', newline='') as csvfile:
     ])
     writer.writerow([]) # separator
     for admissionId in admissionIds:
-        try:
-            columns = [ admissionId ]
+        if admissionId in results:
             personResult = results[admissionId]
+            columns = [ admissionId ]
             # we iterate the results in the order of department ID
-            departmentIds = sorted(personResult.keys())
+            departmentIds = sorted(personResult.keys(), key=nthuSort)
             for departmentId in departmentIds:
                 universityId = departmentId[:3]
                 applyState = personResult[departmentId]
@@ -104,8 +119,8 @@ with open(resultFilepath, 'w', newline='') as csvfile:
                 )
                 columns.append(functions.normalizeApplicationE2C(applyState))
             writer.writerow(columns)
-        except:
-            print('Cannot find result for admission ID: {}'.format(admissionId))
+        else:
+            print('Cannot find the result for admission ID: {}'.format(admissionId))
 
 t_end = time.time()
 
