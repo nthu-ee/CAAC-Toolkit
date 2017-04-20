@@ -7,42 +7,45 @@ import urllib
 
 
 def loadDb(dbFilepath):
+    if not os.path.isfile(dbFilepath):
+        raise Exception('DB file does not exist: {}'.format(dbFilepath))
+
     db = {
         'universityMap': {},
         'departmentMap': {},
     }
 
     # connect to db file
-    if not os.path.isfile(dbFilepath):
-        raise Exception('DB file does not exist: {}'.format(dbFilepath))
+    with sqlite3.connect(dbFilepath) as conn:
 
-    conn = sqlite3.connect(dbFilepath)
+        # build universityMap
+        cursor = conn.execute('''
+            SELECT id, name
+            FROM universities
+        ''')
+        db['universityMap'] = {
+            university[0]: university[1]
+            for university in cursor.fetchall()
+        }
 
-    # build universityMap
-    cursor = conn.execute('''
-        SELECT id, name
-        FROM universities
-    ''')
-    for university in cursor.fetchall():
-        db['universityMap'][university[0]] = university[1]
-
-    # build departmentMap
-    cursor = conn.execute('''
-        SELECT id, name
-        FROM departments
-    ''')
-    for department in cursor.fetchall():
-        db['departmentMap'][department[0]] = department[1]
-
-    conn.close()
+        # build departmentMap
+        cursor = conn.execute('''
+            SELECT id, name
+            FROM departments
+        ''')
+        db['departmentMap'] = {
+            department[0]: department[1]
+            for department in cursor.fetchall()
+        }
 
     return db
 
 
-def batch(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
+def batch(iterable, batchSize=1):
+    length = len(iterable)
+    for idx in range(0, length, batchSize):
+        # python will do the boundary check automatically
+        yield iterable[idx:idx+batchSize]
 
 
 def canBeInt(s):
@@ -60,7 +63,8 @@ def getPage(*args):
         # try to get page content
         try:
             req = urllib.request.Request(*args, headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.68 Safari/537.36',
+                # disguise our crawler as Google Chrome
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36',
             })
             with urllib.request.urlopen(req) as resp:
                 return resp.read().decode('utf-8')
@@ -76,7 +80,7 @@ def getPage(*args):
 
 
 def parseFreshmanTw(content=''):
-    peopleResults = {
+    peopleResult = {
         # '准考證號': {
         #     '系所編號': 'primary',
         #     ...
@@ -90,42 +94,44 @@ def parseFreshmanTw(content=''):
 
     personResult = {}
     for tr in rows.items():
-        findAdmissionId = re.search(r'\b[0-9]{8}\b', tr.html())
+        findAdmissionId = re.search(r'\b(\d{8})\b', tr.html())
         isFirstRow = findAdmissionId is not None
         if isFirstRow:
-            peopleResults.update(personResult)
-            admissionId = findAdmissionId.group(0)
+            peopleResult.update(personResult)
+            admissionId = findAdmissionId.group(1)
             personResult = {
                 admissionId: {},
             }
-        department = tr('td a').attr('href').strip('./ ')
-        applied = tr('td span').text().strip()
-        applied = normalizeApplicationC2E(applied)
-        personResult[admissionId][department] = applied
-    peopleResults.update(personResult)
+        department = tr('td a').attr('href').rstrip('/').split('/')[-1].strip()
+        applyState = tr('td span').text().strip()
+        personResult[admissionId][department] = normalizeApplyStateC2E(applyState)
+    peopleResult.update(personResult)
 
-    return peopleResults
+    return peopleResult
 
 
-def normalizeApplicationC2E(chinese):
+def normalizeApplyStateC2E(chinese):
     # 正取
     if '正' in chinese:
-        order = re.search(r'[0-9]+', chinese)
-        order = '?' if order is None else order.group(0)
+        order = re.search(r'(\d+)', chinese)
+        order = '?' if order is None else order.group(1)
         return 'primary-{}'.format(order)
     # 備取
     if '備' in chinese:
-        order = re.search(r'[0-9]+', chinese)
-        order = '?' if order is None else order.group(0)
+        order = re.search(r'(\d+)', chinese)
+        order = '?' if order is None else order.group(1)
         return 'spare-{}'.format(order)
+    # 落榜
+    if '落' in chinese or '' == chinese:
+        return 'failed'
     # 尚未放榜
-    if '未' in chinese and '放榜' in chinese:
-        return 'unannounced'
-    # 被刷掉了?
-    return 'unapplied'
+    if '未' in chinese and '放' in chinese:
+        return 'notYet'
+    # WTF?
+    return 'unknown'
 
 
-def normalizeApplicationE2C(english):
+def normalizeApplyStateE2C(english):
     # 正取
     if 'primary' in english:
         state = english.split('-')
@@ -138,11 +144,11 @@ def normalizeApplicationE2C(english):
         if state[1] == '?':
             state[1] = ''
         return '備{}'.format(state[1])
+    # 落榜
+    if 'failed' == english:
+        return '落'
     # 尚未放榜
-    if 'unannounced' == english:
+    if 'notYet' == english:
         return '未放榜'
-    # 被刷掉了?
-    if 'unapplied' == english:
-        return '未錄取'
     # WTF?
     return '不明'

@@ -93,7 +93,14 @@ with open('admission_ids.txt', 'r') as f:
 apiUrlFormat = 'https://freshman.tw/cross/106/numbers/{}'
 for admissionId_batch in functions.batch(admissionIdsUnique, args.batchSize):
     apiUrl = apiUrlFormat.format(','.join(admissionId_batch))
-    content = functions.getPage(apiUrl)
+    retryInterval = 5
+    while True:
+        content = functions.getPage(apiUrl)
+        if content is None or '負載過大' in content:
+            print('網站負載過大，{}秒後自動重試。'.format(retryInterval))
+            time.sleep(retryInterval)
+        else:
+            break
     batchResults = functions.parseFreshmanTw(content)
     lookupResults.update(batchResults)
     print('[Fetched by admission IDs] {}'.format(', '.join(admissionId_batch)))
@@ -116,9 +123,9 @@ sheet = [
 
 sheet.append([
     { 'text': '准考證號' },
-    { 'text': '校系與結果' },
+    { 'text': '校系' },
+    { 'text': '榜單狀態' },
 ])
-sheet.append([])
 for admissionId in admissionIds:
     if admissionId in lookupResults:
         row = []
@@ -132,13 +139,13 @@ for admissionId in admissionIds:
             universityId = departmentId[:3]
             applyState = personResult[departmentId]
             row.append({
-                'text': '{} {}'.format(
+                'text': '{}\n{}'.format(
                     universityMap[universityId],
                     departmentMap[departmentId],
                 ),
             })
             row.append({
-                'text': functions.normalizeApplicationE2C(applyState),
+                'text': functions.normalizeApplyStateE2C(applyState),
                 'format': applyState.split('-')[0],
             })
         sheet.append(row)
@@ -147,18 +154,26 @@ for admissionId in admissionIds:
 
 # output the results (xlsx)
 with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
+    formatBase = {
+        'align': 'left',
+        'valign': 'vcenter',
+        'text_wrap': True,
+        'font_size': 10,
+    }
     formats = {
+        '_base_': xlsxfile.add_format(formatBase),
         # 正取
-        'primary': xlsxfile.add_format({ 'bg_color': '#7FD4FF' }),
+        'primary': xlsxfile.add_format({ **formatBase, 'bg_color': '#66FF66' }),
         # 備取
-        'spare': xlsxfile.add_format({ 'bg_color': '#FFFF7F' }),
+        'spare': xlsxfile.add_format({ **formatBase, 'bg_color': '#FFFF66' }),
+        # 落榜
+        'failed': xlsxfile.add_format({ **formatBase, 'bg_color': '#FF6666' }),
         # 未公布
-        'unannounced': xlsxfile.add_format({ 'bg_color': '#C3C3C3' }),
-        # 未錄取
-        'unapplied': xlsxfile.add_format({ 'bg_color': '#FFAAFF' }),
+        'notYet': xlsxfile.add_format({ **formatBase, 'bg_color': '#C3C3C3' }),
     }
 
     worksheet = xlsxfile.add_worksheet('交叉查榜')
+    worksheet.freeze_panes(1, 1)
 
     rowCnt = 0
     for row in sheet:
@@ -167,7 +182,7 @@ with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
             if 'format' in col:
                 worksheet.write(rowCnt, colCnt, col['text'], formats[col['format']])
             else:
-                worksheet.write(rowCnt, colCnt, col['text'])
+                worksheet.write(rowCnt, colCnt, col['text'], formats['_base_'])
             colCnt += 1
         rowCnt += 1
 

@@ -39,14 +39,23 @@ class lookup_db():
     def writeOutResult(outputFile, universityMap, departmentMap, lookupResult, args):
         # output the results (xlsx)
         with xlsxwriter.Workbook(outputFile) as xlsxfile:
+            cellFormat = xlsxfile.add_format({
+                'align': 'left',
+                'valign': 'vcenter',
+                'text_wrap': True,
+                'font_size': 10,
+            })
 
             worksheet = xlsxfile.add_worksheet('篩選結果')
+            worksheet.freeze_panes(1, 1)
+
             worksheet.write_row(
                 0, 0,
-                [ '准考證號', '校名與系所' ]
+                [ '准考證號', '校名與系所' ],
+                cellFormat
             )
 
-            rowCnt = 2
+            rowCnt = 1
             for admissionId, departmentIds in lookupResult.items():
                 applieds = [
                     # '國立臺灣大學 化學工程學系',
@@ -55,14 +64,15 @@ class lookup_db():
                 for departmentId in departmentIds:
                     universityId = departmentId[:3]
                     applieds.append(
-                        "{} {}".format(
+                        "{}\n{}".format(
                             universityMap[universityId],
                             departmentMap[departmentId],
                         )
                     )
                 worksheet.write_row(
                     rowCnt, 0,
-                    [ int(admissionId), *applieds ]
+                    [ int(admissionId), *applieds ],
+                    cellFormat
                 )
                 rowCnt += 1
 

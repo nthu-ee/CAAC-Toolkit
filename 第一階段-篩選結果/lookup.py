@@ -50,14 +50,6 @@ args = parser.parse_args()
 
 year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
 
-universityMap = {
-    # '001': '國立臺灣大學',
-    # ...
-}
-departmentMap = {
-    # '001012': '中國文學系',
-    # ...
-}
 results = {
     # '准考證號': [ '系所編號', ... ],
     # ...
@@ -71,21 +63,31 @@ if not os.path.isfile(dbFilepath):
 
 conn = sqlite3.connect(dbFilepath)
 
-# build universityMap
+# universityMap = {
+#     '001': '國立臺灣大學',
+#     ...
+# }
 cursor = conn.execute('''
     SELECT id, name
     FROM universities
 ''')
-for university in cursor.fetchall():
-    universityMap[university[0]] = university[1]
+universityMap = {
+    university[0]: university[1]
+    for university in cursor.fetchall()
+}
 
-# build departmentMap
+# departmentMap = {
+#     '001012': '中國文學系',
+#     ...
+# }
 cursor = conn.execute('''
     SELECT id, name
     FROM departments
 ''')
-for department in cursor.fetchall():
-    departmentMap[department[0]] = department[1]
+departmentMap = {
+    department[0]: department[1]
+    for department in cursor.fetchall()
+}
 
 # do lookup
 if args.admissionIds:
