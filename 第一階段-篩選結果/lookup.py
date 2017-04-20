@@ -38,8 +38,8 @@ parser.add_argument(
 )
 parser.add_argument(
     '--output',
-    default='result.csv',
-    help='The file to output results. (.csv file)',
+    default='result.xlsx',
+    help='The file to output results. (.xlsx file)',
 )
 parser.add_argument(
     '--outputFormat',
@@ -64,7 +64,7 @@ results = {
 }
 
 dbFilepath = os.path.join(project_config.resultDir.format(year), 'sqlite3.db')
-resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.csv' else args.output + '.csv'
+resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.xlsx' else args.output + '.xlsx'
 
 if not os.path.isfile(dbFilepath):
     raise Exception('DB file does not exist: {}'.format(dbFilepath))
@@ -110,11 +110,11 @@ conn.close()
 # sort the result dict with admissionIds (ascending)
 results = collections.OrderedDict(sorted(results.items()))
 
-# delete the old CSV file
+# delete the old xlsx file
 if os.path.isfile(resultFilepath):
     os.remove(resultFilepath)
 
-# write result to a CSV file
+# write result to a xlsx file
 writeOutMethod = 'writeOutResult{}'.format(args.outputFormat)
 try:
     getattr(lookup_db, writeOutMethod)(

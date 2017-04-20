@@ -1,4 +1,4 @@
-import csv
+import xlsxwriter
 
 
 class lookup_db():
@@ -37,25 +37,34 @@ class lookup_db():
 
     @staticmethod
     def writeOutResult(outputFile, universityMap, departmentMap, lookupResult, args):
-        with open(outputFile, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-            writer.writerow([
-                '准考證號',
-                '系所編號',
-                '校名',
-                '系所',
-            ])
-            writer.writerow([]) # separator
+        # output the results (xlsx)
+        with xlsxwriter.Workbook(outputFile) as xlsxfile:
+
+            worksheet = xlsxfile.add_worksheet('篩選結果')
+            worksheet.write_row(
+                0, 0,
+                [ '准考證號', '校名與系所' ]
+            )
+
+            rowCnt = 2
             for admissionId, departmentIds in lookupResult.items():
+                applieds = [
+                    # '國立臺灣大學 化學工程學系',
+                    # ...
+                ]
                 for departmentId in departmentIds:
                     universityId = departmentId[:3]
-                    writer.writerow([
-                        admissionId,
-                        departmentId,
-                        universityMap[universityId],
-                        departmentMap[departmentId],
-                    ])
-                writer.writerow([]) # separator
+                    applieds.append(
+                        "{} {}".format(
+                            universityMap[universityId],
+                            departmentMap[departmentId],
+                        )
+                    )
+                worksheet.write_row(
+                    rowCnt, 0,
+                    [ int(admissionId), *applieds ]
+                )
+                rowCnt += 1
 
     @staticmethod
     def writeOutResultNthuEe(outputFile, universityMap, departmentMap, lookupResult, args):
@@ -86,27 +95,4 @@ class lookup_db():
             departmentIds.sort(key=nthuSort)
             postProcessedResults[admissionId] = departmentIds
 
-        with open(outputFile, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-            writer.writerow([
-                '准考證號',
-                '校名與系所',
-            ])
-            writer.writerow([]) # separator
-            for admissionId, departmentIds in postProcessedResults.items():
-                applieds = [
-                    # '國立臺灣大學 化學工程學系',
-                    # ...
-                ]
-                for departmentId in departmentIds:
-                    universityId = departmentId[:3]
-                    applieds.append(
-                        "{} {}".format(
-                            universityMap[universityId],
-                            departmentMap[departmentId],
-                        )
-                    )
-                writer.writerow([
-                    admissionId,
-                    *applieds,
-                ])
+        lookup_db.writeOutResult(outputFile, universityMap, departmentMap, postProcessedResults, args)
