@@ -90,9 +90,9 @@ with open('admission_ids.txt', 'r') as f:
     # unique
     admissionIdsUnique = list(set(admissionIds))
 
-apiUrlFormat = 'https://freshman.tw/cross/106/numbers/{}'
+apiUrlFormat = 'https://freshman.tw/cross/{}/numbers/{}'
 for admissionId_batch in functions.batch(admissionIdsUnique, args.batchSize):
-    apiUrl = apiUrlFormat.format(','.join(admissionId_batch))
+    apiUrl = apiUrlFormat.format(year, ','.join(admissionId_batch))
     retryInterval = 5
     while True:
         content = functions.getPage(apiUrl)
