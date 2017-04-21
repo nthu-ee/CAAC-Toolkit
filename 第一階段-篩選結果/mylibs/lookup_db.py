@@ -43,7 +43,7 @@ class lookup_db():
                 'align': 'left',
                 'valign': 'vcenter',
                 'text_wrap': True,
-                'font_size': 10,
+                'font_size': 9,
             })
 
             worksheet = xlsxfile.add_worksheet('篩選結果')

@@ -123,7 +123,7 @@ sheet = [
 
 sheet.append([
     { 'text': '准考證號' },
-    { 'text': '校系' },
+    { 'text': '校系名稱' },
     { 'text': '榜單狀態' },
 ])
 for admissionId in admissionIds:
@@ -131,6 +131,7 @@ for admissionId in admissionIds:
         row = []
         row.append({
             'text': int(admissionId),
+            'format': 'admissionId',
         })
         personResult = lookupResults[admissionId]
         # we iterate the results in the order of department ID
@@ -143,10 +144,11 @@ for admissionId in admissionIds:
                     universityMap[universityId],
                     departmentMap[departmentId],
                 ),
+                'format': 'department',
             })
             row.append({
                 'text': functions.normalizeApplyStateE2C(applyState),
-                'format': applyState.split('-')[0],
+                'format': 'applyState-{}'.format(applyState.split('-')[0]),
             })
         sheet.append(row)
     else:
@@ -154,22 +156,59 @@ for admissionId in admissionIds:
 
 # output the results (xlsx)
 with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
-    formatBase = {
-        'align': 'left',
-        'valign': 'vcenter',
-        'text_wrap': True,
-        'font_size': 10,
+    baseFormats = {
+        '_base_': {
+            'align': 'left',
+            'valign': 'vcenter',
+            'text_wrap': 1,
+            'font_size': 9,
+        },
+        '_department_': {
+            'top': 1,
+            'bottom': 1,
+            'left': 1,
+            'right': 0,
+        },
+        '_applyState_': {
+            'top': 1,
+            'bottom': 1,
+            'left': 0,
+            'right': 1,
+        },
     }
     formats = {
-        '_base_': xlsxfile.add_format(formatBase),
-        # 正取
-        'primary': xlsxfile.add_format({ **formatBase, 'bg_color': '#66FF66' }),
-        # 備取
-        'spare': xlsxfile.add_format({ **formatBase, 'bg_color': '#FFFF66' }),
-        # 落榜
-        'failed': xlsxfile.add_format({ **formatBase, 'bg_color': '#FF6666' }),
-        # 未公布
-        'notYet': xlsxfile.add_format({ **formatBase, 'bg_color': '#C3C3C3' }),
+        'base': xlsxfile.add_format({
+            **baseFormats['_base_'],
+        }),
+        # 校系名稱
+        'department': xlsxfile.add_format({
+            **baseFormats['_base_'],
+            **baseFormats['_department_'],
+        }),
+        # 榜單狀態：正取
+        'applyState-primary': xlsxfile.add_format({
+            **baseFormats['_base_'],
+            **baseFormats['_applyState_'],
+            'bg_color': '#66FF66',
+        }),
+        # 榜單狀態：備取
+        'applyState-spare': xlsxfile.add_format({
+            **baseFormats['_base_'],
+            **baseFormats['_applyState_'],
+            'bg_color': '#FFFF66',
+        }),
+        # 榜單狀態：落榜
+        'applyState-failed': xlsxfile.add_format({
+            **baseFormats['_base_'],
+            **baseFormats['_applyState_'],
+            'bg_color': '#FF6666',
+        }),
+        # 榜單狀態：尚未公布
+        'applyState-notYet': xlsxfile.add_format({
+            **baseFormats['_base_'],
+            **baseFormats['_applyState_'],
+            'bg_color': '#C3C3C3',
+        }),
     }
 
     worksheet = xlsxfile.add_worksheet('交叉查榜')
@@ -179,10 +218,10 @@ with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
     for row in sheet:
         colCnt = 0
         for col in row:
-            if 'format' in col:
+            if 'format' in col and col['format'] in formats:
                 worksheet.write(rowCnt, colCnt, col['text'], formats[col['format']])
             else:
-                worksheet.write(rowCnt, colCnt, col['text'], formats['_base_'])
+                worksheet.write(rowCnt, colCnt, col['text'], formats['base'])
             colCnt += 1
         rowCnt += 1
 
