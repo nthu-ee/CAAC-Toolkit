@@ -123,19 +123,19 @@ sheetFmts = {
     },
     # 榜單狀態：正取
     'applyState-primary': {
-        'bg_color': '#66FF66',
+        'bg_color': '#99FF99',
     },
     # 榜單狀態：備取
     'applyState-spare': {
-        'bg_color': '#FFFF66',
+        'bg_color': '#FFFF99',
     },
     # 榜單狀態：落榜
     'applyState-failed': {
-        'bg_color': '#FF6666',
+        'bg_color': '#FF9999',
     },
     # 榜單狀態：尚未公布
     'applyState-notYet': {
-        'bg_color': '#C3C3C3',
+        'bg_color': '#D0D0D0',
     },
 }
 
