@@ -90,138 +90,130 @@ with open('admission_ids.txt', 'r') as f:
     # unique
     admissionIdsUnique = list(set(admissionIds))
 
+apiRetryInterval = 5
 apiUrlFormat = 'https://freshman.tw/cross/{}/numbers/{}'
 for admissionId_batch in functions.batch(admissionIdsUnique, args.batchSize):
     apiUrl = apiUrlFormat.format(year, ','.join(admissionId_batch))
-    retryInterval = 5
     while True:
         content = functions.getPage(apiUrl)
         if content is None or '負載過大' in content:
-            print('網站負載過大，{}秒後自動重試。'.format(retryInterval))
-            time.sleep(retryInterval)
+            print('網站負載過大，{}秒後自動重試。'.format(apiRetryInterval))
+            time.sleep(apiRetryInterval)
         else:
             break
     batchResults = functions.parseFreshmanTw(content)
     lookupResults.update(batchResults)
     print('[Fetched by admission IDs] {}'.format(', '.join(admissionId_batch)))
 
-sheet = [
+sheetFmts = {
+    'base': {
+        'align': 'left', 'valign': 'vcenter',
+        'text_wrap': 1,
+        'font_size': 9,
+    },
+    # 准考證號
+    'admissionId': {},
+    # 校系名稱
+    'department': {
+        'top': 1, 'bottom': 1, 'left': 1, 'right': 0,
+    },
+    # 榜單狀態
+    'applyState': {
+        'top': 1, 'bottom': 1, 'left': 0, 'right': 1,
+    },
+    # 榜單狀態：正取
+    'applyState-primary': {
+        'bg_color': '#66FF66',
+    },
+    # 榜單狀態：備取
+    'applyState-spare': {
+        'bg_color': '#FFFF66',
+    },
+    # 榜單狀態：落榜
+    'applyState-failed': {
+        'bg_color': '#FF6666',
+    },
+    # 榜單狀態：尚未公布
+    'applyState-notYet': {
+        'bg_color': '#C3C3C3',
+    },
+}
+
+sheetData = [
     # (row 0)
     # [
     #     (column 0)
-    #     { 'text': 'xxx', 'format': 'yyy' },
+    #     { 'text': 'xxx', 'fmts': [ 'yyy', ... ] },
     #     ...
     # ],
     # (row 1)
     # [
     #     (column 0)
-    #     { 'text': 'xxx', 'format': 'yyy' },
+    #     { 'text': 'xxx', 'fmts': [ 'yyy', ... ] },
     #     ...
     # ],
     # ...
+    [
+        { 'text': '准考證號' },
+        { 'text': '校系名稱' },
+        { 'text': '榜單狀態' },
+    ],
 ]
 
-sheet.append([
-    { 'text': '准考證號' },
-    { 'text': '校系名稱' },
-    { 'text': '榜單狀態' },
-])
 for admissionId in admissionIds:
     if admissionId in lookupResults:
         row = []
         row.append({
             'text': int(admissionId),
-            'format': 'admissionId',
+            'fmts': [ 'admissionId' ],
         })
         personResult = lookupResults[admissionId]
         # we iterate the results in the order of department ID
         departmentIds = sorted(personResult.keys(), key=nthuSort)
         for departmentId in departmentIds:
             universityId = departmentId[:3]
-            applyState = personResult[departmentId]
+            applyState = personResult[departmentId] # ex: spare-10, notYet
+            applyType = applyState.split('-')[0]    # ex: spare,    notYet
             row.append({
                 'text': '{}\n{}'.format(
                     universityMap[universityId],
                     departmentMap[departmentId],
                 ),
-                'format': 'department',
+                'fmts': [ 'department' ],
             })
             row.append({
                 'text': functions.normalizeApplyStateE2C(applyState),
-                'format': 'applyState-{}'.format(applyState.split('-')[0]),
+                'fmts': [
+                    'applyState',
+                    'applyState-{}'.format(applyType),
+                ],
             })
-        sheet.append(row)
+        sheetData.append(row)
     else:
-        print('Cannot find the result for admission ID: {}'.format(admissionId))
+        print('[Warning] Cannot find the result for admission ID: {}'.format(admissionId))
 
 # output the results (xlsx)
 with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
-    baseFormats = {
-        '_base_': {
-            'align': 'left',
-            'valign': 'vcenter',
-            'text_wrap': 1,
-            'font_size': 9,
-        },
-        '_department_': {
-            'top': 1,
-            'bottom': 1,
-            'left': 1,
-            'right': 0,
-        },
-        '_applyState_': {
-            'top': 1,
-            'bottom': 1,
-            'left': 0,
-            'right': 1,
-        },
-    }
-    formats = {
-        'base': xlsxfile.add_format({
-            **baseFormats['_base_'],
-        }),
-        # 校系名稱
-        'department': xlsxfile.add_format({
-            **baseFormats['_base_'],
-            **baseFormats['_department_'],
-        }),
-        # 榜單狀態：正取
-        'applyState-primary': xlsxfile.add_format({
-            **baseFormats['_base_'],
-            **baseFormats['_applyState_'],
-            'bg_color': '#66FF66',
-        }),
-        # 榜單狀態：備取
-        'applyState-spare': xlsxfile.add_format({
-            **baseFormats['_base_'],
-            **baseFormats['_applyState_'],
-            'bg_color': '#FFFF66',
-        }),
-        # 榜單狀態：落榜
-        'applyState-failed': xlsxfile.add_format({
-            **baseFormats['_base_'],
-            **baseFormats['_applyState_'],
-            'bg_color': '#FF6666',
-        }),
-        # 榜單狀態：尚未公布
-        'applyState-notYet': xlsxfile.add_format({
-            **baseFormats['_base_'],
-            **baseFormats['_applyState_'],
-            'bg_color': '#C3C3C3',
-        }),
-    }
 
     worksheet = xlsxfile.add_worksheet('交叉查榜')
     worksheet.freeze_panes(1, 1)
 
     rowCnt = 0
-    for row in sheet:
+    for row in sheetData:
         colCnt = 0
         for col in row:
-            if 'format' in col and col['format'] in formats:
-                worksheet.write(rowCnt, colCnt, col['text'], formats[col['format']])
-            else:
-                worksheet.write(rowCnt, colCnt, col['text'], formats['base'])
+            # determine the cell format
+            cellFmt = sheetFmts['base'].copy()
+            if 'fmts' in col:
+                for fmt in col['fmts']:
+                    if fmt in sheetFmts:
+                        cellFmt.update(sheetFmts[fmt])
+            # apply the cell format
+            worksheet.write(
+                rowCnt, colCnt,
+                col['text'],
+                xlsxfile.add_format(cellFmt)
+            )
             colCnt += 1
         rowCnt += 1
 
