@@ -111,6 +111,10 @@ sheetFmts = {
         'text_wrap': 1,
         'font_size': 9,
     },
+    # 清大電機
+    'nthuEe': {
+        'bold': 1,
+    },
     # 准考證號
     'admissionId': {},
     # 校系名稱
@@ -172,14 +176,22 @@ for admissionId in admissionIds:
         departmentIds = sorted(personResult.keys(), key=nthuSort)
         for departmentId in departmentIds:
             universityId = departmentId[:3]
+
+            universityName = universityMap[universityId]
+            departmentName = departmentMap[departmentId]
             applyState = personResult[departmentId] # ex: spare-10, notYet
             applyType = applyState.split('-')[0]    # ex: spare,    notYet
+
             row.append({
-                'text': '{}\n{}'.format(
-                    universityMap[universityId],
-                    departmentMap[departmentId],
-                ),
-                'fmts': [ 'department' ],
+                'text': '{}\n{}'.format(universityName, departmentName),
+                'fmts':
+                    # NTHU specialization
+                    [ 'department', 'nthuEe' ]
+                    if '清華大學' in universityName and
+                       '電機工程' in departmentName
+                    else
+                    [ 'department' ]
+                ,
             })
             row.append({
                 'text': functions.normalizeApplyStateE2C(applyState),
