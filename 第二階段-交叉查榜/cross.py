@@ -67,12 +67,23 @@ def nthuSort(departmentId):
     global universityMap, departmentMap
 
     universityId = departmentId[:3]
+    universityName = universityMap[universityId]
+    departmentName = departmentMap[departmentId]
 
-    if '清華大學' in universityMap[universityId]:
-        if '電機工程' in departmentMap[departmentId]:
-            return '9' * 6 # 清大電機 should be the last one
+    # 清華大學 be the later one
+    if '清華大學' in universityName:
+        # 電機工程 be the later one
+        if '電機工程' in departmentName:
+            # 甲組 be the first
+            if '甲組' in departmentName:
+                return '9' * 3 + '990'
+            # 乙組 be the later
+            else:
+                return '9' * 3 + '999'
+        # other department the the first
         else:
             return '9' * 3 + departmentId[-3:]
+    # other university be the first
     else:
         return departmentId
 
