@@ -127,7 +127,7 @@ class crawler_caac():
             content = f.read()
             founds = re.finditer(r'\(([0-9]{3})\)\d*([\w\s]+)', content)
             for found in founds:
-                # let's find something like "(001)國立臺灣大學"
+                # let's find something like "(013)國立交通大學"
                 universityMap[found.group(1)] = found.group(2).strip()
 
         # build departmentMap and departmentToAdmittees
@@ -137,8 +137,8 @@ class crawler_caac():
                 departmentId = os.path.splitext(file)[0]
                 with open(os.path.join(basePath, file), 'r', encoding='utf-8') as f:
                     content = f.read()
-                    # let's find something like "(001012)中國文學系"
-                    founds = re.finditer(r'\(([0-9]{6})\)\d*([\w\s]+)', content)
+                    # let's find something like "(013032)電子工程學系(甲組)"
+                    founds = re.finditer(r'\(([0-9]{6})\)\s*([\w\s\[\]［］()（）]+)', content)
                     for found in founds:
                         departmentMap[found.group(1)] = found.group(2).strip()
                     # let's find something like "10008031" (學測准考證號)
