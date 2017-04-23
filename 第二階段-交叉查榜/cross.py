@@ -216,7 +216,7 @@ for admissionId in admissionIds:
 # output the results (xlsx)
 with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
 
-    worksheet = xlsxfile.add_worksheet('交叉查榜')
+    worksheet = xlsxfile.add_worksheet('第二階段-交叉查榜')
     worksheet.freeze_panes(1, 1)
 
     rowCnt = 0

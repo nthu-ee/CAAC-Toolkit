@@ -84,7 +84,7 @@ class lookup_db():
                 'font_size': 9,
             })
 
-            worksheet = xlsxfile.add_worksheet('篩選結果')
+            worksheet = xlsxfile.add_worksheet('第一階段-篩選結果')
             worksheet.freeze_panes(1, 1)
 
             worksheet.write_row(
