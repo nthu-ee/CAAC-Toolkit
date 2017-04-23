@@ -90,9 +90,7 @@ def nthuSort(departmentId):
 
 t_start = time.time()
 
-db = functions.loadDb(dbFilepath)
-universityMap = db['universityMap']
-departmentMap = db['departmentMap']
+universityMap, departmentMap = functions.loadDb(dbFilepath)
 
 with open('admission_ids.txt', 'r') as f:
     admissionIds = f.read().split()

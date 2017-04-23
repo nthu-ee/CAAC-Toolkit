@@ -10,10 +10,7 @@ def loadDb(dbFilepath):
     if not os.path.isfile(dbFilepath):
         raise Exception('DB file does not exist: {}'.format(dbFilepath))
 
-    db = {
-        'universityMap': {},
-        'departmentMap': {},
-    }
+    universityMap = departmentMap = {}
 
     # connect to db file
     with sqlite3.connect(dbFilepath) as conn:
@@ -23,7 +20,7 @@ def loadDb(dbFilepath):
             SELECT id, name
             FROM universities
         ''')
-        db['universityMap'] = {
+        universityMap = {
             university[0]: university[1]
             for university in cursor.fetchall()
         }
@@ -33,12 +30,12 @@ def loadDb(dbFilepath):
             SELECT id, name
             FROM departments
         ''')
-        db['departmentMap'] = {
+        departmentMap = {
             department[0]: department[1]
             for department in cursor.fetchall()
         }
 
-    return db
+    return universityMap, departmentMap
 
 
 def batch(iterable, batchSize=1):

@@ -48,6 +48,11 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+
+def listCleanUnique(l):
+    return list(set(filter(len, l)))
+
+
 year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
 
 results = {
@@ -61,53 +66,20 @@ resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.xl
 if not os.path.isfile(dbFilepath):
     raise Exception('DB file does not exist: {}'.format(dbFilepath))
 
-conn = sqlite3.connect(dbFilepath)
-
-# universityMap = {
-#     '001': '國立臺灣大學',
-#     ...
-# }
-cursor = conn.execute('''
-    SELECT id, name
-    FROM universities
-''')
-universityMap = {
-    university[0]: university[1]
-    for university in cursor.fetchall()
-}
-
-# departmentMap = {
-#     '001012': '中國文學系',
-#     ...
-# }
-cursor = conn.execute('''
-    SELECT id, name
-    FROM departments
-''')
-departmentMap = {
-    department[0]: department[1]
-    for department in cursor.fetchall()
-}
+lookup = lookup_db(dbFilepath)
+lookup.loadDb()
 
 # do lookup
 if args.admissionIds:
-    admissionIds = list(set( # list unique
-        filter(len, args.admissionIds.split(','))
-    ))
-
-    result = lookup_db.lookupByAdmissionIds(conn, admissionIds)
+    admissionIds = listCleanUnique(args.admissionIds.split(','))
+    result = lookup.lookupByAdmissionIds(admissionIds)
     results.update(result)
 
 # do lookup
 if args.departmentIds:
-    departmentIds = list(set( # list unique
-        filter(len, args.departmentIds.split(','))
-    ))
-
-    result = lookup_db.lookupByDepartmentIds(conn, departmentIds)
+    departmentIds = listCleanUnique(args.departmentIds.split(','))
+    result = lookup.lookupByDepartmentIds(departmentIds)
     results.update(result)
-
-conn.close()
 
 # sort the result dict with admissionIds (ascending)
 results = collections.OrderedDict(sorted(results.items()))
@@ -119,10 +91,8 @@ if os.path.isfile(resultFilepath):
 # write result to a xlsx file
 writeOutMethod = 'writeOutResult{}'.format(args.outputFormat)
 try:
-    getattr(lookup_db, writeOutMethod)(
+    getattr(lookup, writeOutMethod)(
         resultFilepath,
-        universityMap,
-        departmentMap,
         results,
         args,
     )
