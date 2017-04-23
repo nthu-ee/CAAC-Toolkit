@@ -2,7 +2,6 @@ import argparse
 import collections
 import datetime
 import os
-import sqlite3
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -50,6 +49,7 @@ args = parser.parse_args()
 
 
 def listCleanUnique(l):
+    # remove empty and leave unique
     return list(set(filter(len, l)))
 
 
@@ -62,9 +62,6 @@ results = {
 
 dbFilepath = os.path.join(project_config.resultDir.format(year), 'sqlite3.db')
 resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.xlsx' else args.output + '.xlsx'
-
-if not os.path.isfile(dbFilepath):
-    raise Exception('DB file does not exist: {}'.format(dbFilepath))
 
 lookup = lookup_db(dbFilepath)
 lookup.loadDb()

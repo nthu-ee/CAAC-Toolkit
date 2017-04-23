@@ -10,8 +10,6 @@ def loadDb(dbFilepath):
     if not os.path.isfile(dbFilepath):
         raise Exception('DB file does not exist: {}'.format(dbFilepath))
 
-    universityMap = departmentMap = {}
-
     # connect to db file
     with sqlite3.connect(dbFilepath) as conn:
 
@@ -85,7 +83,7 @@ def parseFreshmanTw(content=''):
         # ...
     }
 
-    content = content.replace('\r', '').replace('\n', '') # sanitization
+    content = content.replace('\r', '').replace('\n', ' ') # sanitization
     table = pq(content)('#cross_dept tbody') # get the result html table
     rows = table('tr')
 

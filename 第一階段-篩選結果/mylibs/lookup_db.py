@@ -1,5 +1,6 @@
-import xlsxwriter
+import os
 import sqlite3
+import xlsxwriter
 
 
 class lookup_db():
@@ -20,6 +21,9 @@ class lookup_db():
     departmentMap = {}
 
     def __init__(self, dbFilepath):
+        if not os.path.isfile(dbFilepath):
+            raise Exception('DB file does not exist: {}'.format(dbFilepath))
+
         self.conn = sqlite3.connect(dbFilepath)
 
         cursor = self.conn.execute('''
@@ -39,6 +43,12 @@ class lookup_db():
             department[0]: department[1]
             for department in cursor.fetchall()
         }
+
+    def __del__(self):
+        try:
+            self.conn.close()
+        except:
+            pass
 
     def loadDb(self):
 

@@ -72,20 +72,16 @@ def nthuSort(departmentId):
 
     # 清華大學 be the later one
     if '清華大學' in universityName:
+        # note that in ASCII code, 'Z' > 'B' > 'A'
         # 電機工程 be the later one
         if '電機工程' in departmentName:
-            # 甲組 be the first
-            if '甲組' in departmentName:
-                return '9' * 3 + '990'
-            # 乙組 be the later
-            else:
-                return '9' * 3 + '999'
+            return 'Z' + departmentId
         # other department the the first
         else:
-            return '9' * 3 + departmentId[-3:]
+            return 'B' + departmentId
     # other university be the first
     else:
-        return departmentId
+        return 'A' + departmentId
 
 
 t_start = time.time()
@@ -99,6 +95,7 @@ with open('admission_ids.txt', 'r') as f:
     # unique
     admissionIdsUnique = list(set(admissionIds))
 
+# fetch data from the API
 apiRetryInterval = 5
 apiUrlFormat = 'https://freshman.tw/cross/{}/numbers/{}'
 for admissionId_batch in functions.batch(admissionIdsUnique, args.batchSize):
@@ -173,6 +170,7 @@ sheetData = [
     ],
 ]
 
+# construct sheetData
 for admissionId in admissionIds:
     if admissionId in lookupResults:
         row = []
