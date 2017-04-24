@@ -95,7 +95,8 @@ def parseFreshmanTw(content=''):
         if isFirstRow:
             peopleResult.update(personResult)
             admissionId = findAdmissionId.group(1)
-            personName = tr('td:nth-child(2)').text().strip()
+            # remove the potential spaces in person names
+            personName = re.sub(r'[\s　]+', '', tr('td:nth-child(2)').text())
             personResult = {
                 admissionId: { '_name': personName },
             }
