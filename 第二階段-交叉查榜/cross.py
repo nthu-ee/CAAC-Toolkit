@@ -56,7 +56,8 @@ departmentMap = {
 }
 lookupResults = {
     # '准考證號': {
-    #     '系所編號': 'primary',
+    #     '_name': '考生姓名',
+    #     '系所編號1': 'primary',
     #     ...
     # },
     # ...
@@ -65,6 +66,10 @@ lookupResults = {
 
 def nthuSort(departmentId):
     global universityMap, departmentMap
+
+    # special attribute like '_name'
+    if departmentId[0] == '_':
+        return departmentId
 
     universityId = departmentId[:3]
     universityName = universityMap[universityId]
@@ -121,8 +126,6 @@ sheetFmts = {
     'nthuEe': {
         'bold': 1,
     },
-    # 准考證號
-    'admissionId': {},
     # 校系名稱
     'department': {
         'top': 1, 'bottom': 1, 'left': 1, 'right': 0,
@@ -165,6 +168,7 @@ sheetData = [
     # ...
     [
         { 'text': '准考證號' },
+        { 'text': '考生姓名' },
         { 'text': '校系名稱' },
         { 'text': '榜單狀態' },
     ],
@@ -174,14 +178,18 @@ sheetData = [
 for admissionId in admissionIds:
     if admissionId in lookupResults:
         row = []
-        row.append({
-            'text': int(admissionId),
-            'fmts': [ 'admissionId' ],
-        })
         personResult = lookupResults[admissionId]
+
+        row.append({ 'text': int(admissionId) })
+        row.append({ 'text': personResult['_name'] })
+
         # we iterate the results in the order of department ID
         departmentIds = sorted(personResult.keys(), key=nthuSort)
         for departmentId in departmentIds:
+            # special attribute like '_name'
+            if departmentId[0] == '_':
+                continue
+
             universityId = departmentId[:3]
 
             universityName = universityMap[universityId]
@@ -215,7 +223,7 @@ for admissionId in admissionIds:
 with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
 
     worksheet = xlsxfile.add_worksheet('第二階段-交叉查榜')
-    worksheet.freeze_panes(1, 1)
+    worksheet.freeze_panes(1, 2)
 
     rowCnt = 0
     for row in sheetData:

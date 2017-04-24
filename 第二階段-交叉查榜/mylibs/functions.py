@@ -77,7 +77,8 @@ def getPage(*args):
 def parseFreshmanTw(content=''):
     peopleResult = {
         # '准考證號': {
-        #     '系所編號': 'primary',
+        #     '_name': '考生姓名',
+        #     '系所編號1': 'primary',
         #     ...
         # },
         # ...
@@ -89,13 +90,14 @@ def parseFreshmanTw(content=''):
 
     personResult = {}
     for tr in rows.items():
-        findAdmissionId = re.search(r'\b(\d{8})\b', tr.html())
+        findAdmissionId = re.search(r'\b(\d{8})\b', tr.text())
         isFirstRow = findAdmissionId is not None
         if isFirstRow:
             peopleResult.update(personResult)
             admissionId = findAdmissionId.group(1)
+            personName = tr('td:nth-child(2)').text().strip()
             personResult = {
-                admissionId: {},
+                admissionId: { '_name': personName },
             }
         department = tr('td a').attr('href').rstrip('/').split('/')[-1].strip()
         applyState = tr('td span').text().strip()
