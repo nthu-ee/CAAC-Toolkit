@@ -57,15 +57,22 @@ def getPage(*args):
     while True:
         # try to get page content
         try:
+            url = args[0]
+            urlParsed = urllib.parse.urlparse(url)
             req = urllib.request.Request(*args, headers={
-                # disguise our crawler as Google Chrome
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Encoding': 'deflate',
+                'Accept-Language': 'zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36',
+                'Host': urlParsed.netloc,
+                'Referer': '{uri.scheme}://{uri.netloc}'.format(uri=urlParsed),
             })
             with urllib.request.urlopen(req) as resp:
                 return resp.read().decode('utf-8')
         # somehow we cannot get the page content
         except Exception as e:
             errMsg = str(e)
+            print(errMsg)
             # HTTP error code
             if errMsg.startswith('HTTP Error '):
                 return None
