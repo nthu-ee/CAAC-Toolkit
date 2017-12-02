@@ -36,21 +36,6 @@ def loadDb(dbFilepath):
     return universityMap, departmentMap
 
 
-def batch(iterable, batchSize=1):
-    length = len(iterable)
-    for idx in range(0, length, batchSize):
-        # python will do the boundary check automatically
-        yield iterable[idx:idx+batchSize]
-
-
-def canBeInt(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
-
 def getPage(*args):
     """ get a certain web page """
 
@@ -157,3 +142,24 @@ def normalizeApplyStateE2C(english):
         return '未放榜'
     # WTF?
     return '不明'
+
+
+def batch(iterable, batchSize=1):
+    length = len(iterable)
+    for idx in range(0, length, batchSize):
+        # python will do the boundary check automatically
+        yield iterable[idx:idx+batchSize]
+
+
+def canBeInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
+def listUnique(theList, clear=False):
+    theList = list(set(theList))
+
+    return filter(len, theList) if clear else theList

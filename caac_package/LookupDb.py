@@ -3,7 +3,7 @@ import sqlite3
 import xlsxwriter
 
 
-class lookup_db():
+class LookupDb():
 
     # db handle
     conn = None
@@ -45,10 +45,8 @@ class lookup_db():
         }
 
     def __del__(self):
-        try:
+        if self.conn is not None:
             self.conn.close()
-        except:
-            pass
 
     def loadDb(self):
 

@@ -6,24 +6,15 @@ import time
 import xlsxwriter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
-from project_config import project_config
-import functions
-
-YEAR_BEGIN = 1911
-YEAR_CURRENT = datetime.datetime.now().year - YEAR_BEGIN
-
-# change the working directory
-try:
-    os.chdir(os.path.dirname(__file__))
-except:
-    pass
+from caac_package.ProjectConfig import ProjectConfig
+from caac_package.Year import Year
+import caac_package.functions as caac_funcs
 
 parser = argparse.ArgumentParser(description='An utility for looking up Univerisy Entrance result.')
 parser.add_argument(
     '--year',
     type=int,
-    default=YEAR_CURRENT,
+    default=Year.YEAR_CURRENT,
     help='The year of data to be processed. (ex: 2017 or 106 is the same)',
 )
 parser.add_argument(
@@ -39,9 +30,9 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
-dbFilepath = os.path.join(project_config.resultDir.format(year), 'sqlite3.db')
+year = Year.taiwanize(args.year)
 resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.xlsx' else args.output + '.xlsx'
+dbFilepath = ProjectConfig.getCrawledDbFilepath(year)
 
 # variables
 admissionIds = [] # 學測准考證
@@ -91,28 +82,28 @@ def nthuSort(departmentId):
 
 t_start = time.time()
 
-universityMap, departmentMap = functions.loadDb(dbFilepath)
+universityMap, departmentMap = caac_funcs.loadDb(dbFilepath)
 
 with open('admission_ids.txt', 'r') as f:
     admissionIds = f.read().split()
     # filter out those are not integers
-    admissionIds = list(filter(lambda x: functions.canBeInt(x), admissionIds))
+    admissionIds = list(filter(lambda x: caac_funcs.canBeInt(x), admissionIds))
     # unique
     admissionIdsUnique = list(set(admissionIds))
 
 # fetch data from the API
 apiRetryInterval = 5
 apiUrlFormat = 'https://freshman.tw/cross/{}/numbers/{}'
-for admissionId_batch in functions.batch(admissionIdsUnique, args.batchSize):
+for admissionId_batch in caac_funcs.batch(admissionIdsUnique, args.batchSize):
     apiUrl = apiUrlFormat.format(year, ','.join(admissionId_batch))
     while True:
-        content = functions.getPage(apiUrl)
+        content = caac_funcs.getPage(apiUrl)
         if content is None or '負載過大' in content:
             print('網站負載過大，{}秒後自動重試。'.format(apiRetryInterval))
             time.sleep(apiRetryInterval)
         else:
             break
-    batchResults = functions.parseFreshmanTw(content)
+    batchResults = caac_funcs.parseFreshmanTw(content)
     lookupResults.update(batchResults)
     print('[Fetched by admission IDs] {}'.format(', '.join(admissionId_batch)))
 
@@ -209,7 +200,7 @@ for admissionId in admissionIds:
                 ,
             })
             row.append({
-                'text': functions.normalizeApplyStateE2C(applyState),
+                'text': caac_funcs.normalizeApplyStateE2C(applyState),
                 'fmts': [
                     'applyState',
                     'applyState-{}'.format(applyType),

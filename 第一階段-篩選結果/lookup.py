@@ -5,24 +5,16 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'mylibs'))
-from project_config import project_config
-from lookup_db import lookup_db
-
-YEAR_BEGIN = 1911
-YEAR_CURRENT = datetime.datetime.now().year - YEAR_BEGIN
-
-# change the working directory
-try:
-    os.chdir(os.path.dirname(__file__))
-except:
-    pass
+from caac_package.LookupDb import LookupDb
+from caac_package.ProjectConfig import ProjectConfig
+from caac_package.Year import Year
+import caac_package.functions as caac_funcs
 
 parser = argparse.ArgumentParser(description='A database lookup utility for CAAC website.')
 parser.add_argument(
     '--year',
     type=int,
-    default=YEAR_CURRENT,
+    default=Year.YEAR_CURRENT,
     help='The year of data to be processed. (ex: 2017 or 106 is the same)',
 )
 parser.add_argument(
@@ -37,7 +29,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--output',
-    default='result.xlsx',
+    default=datetime.datetime.now().strftime('result_%Y%m%d_%H%M%S.xlsx'),
     help='The file to output results. (.xlsx file)',
 )
 parser.add_argument(
@@ -47,34 +39,28 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+year = Year.taiwanize(args.year)
+resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.xlsx' else args.output + '.xlsx'
+dbFilepath = ProjectConfig.getCrawledDbFilepath(year)
 
-def listCleanUnique(l):
-    # remove empty and leave unique
-    return list(set(filter(len, l)))
-
-
-year = args.year - YEAR_BEGIN if args.year >= YEAR_BEGIN else args.year
-
+# variables
 results = {
     # '准考證號': [ '系所編號', ... ],
     # ...
 }
 
-dbFilepath = os.path.join(project_config.resultDir.format(year), 'sqlite3.db')
-resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.xlsx' else args.output + '.xlsx'
-
-lookup = lookup_db(dbFilepath)
+lookup = LookupDb(dbFilepath)
 lookup.loadDb()
 
 # do lookup
 if args.admissionIds:
-    admissionIds = listCleanUnique(args.admissionIds.split(','))
+    admissionIds = caac_funcs.listUnique(args.admissionIds.split(','), clear=True)
     result = lookup.lookupByAdmissionIds(admissionIds)
     results.update(result)
 
 # do lookup
 if args.departmentIds:
-    departmentIds = listCleanUnique(args.departmentIds.split(','))
+    departmentIds = caac_funcs.listUnique(args.departmentIds.split(','), clear=True)
     result = lookup.lookupByDepartmentIds(departmentIds)
     results.update(result)
 

@@ -1,4 +1,4 @@
-from project_config import project_config
+from .ProjectConfig import ProjectConfig
 from pyquery import PyQuery as pq
 import codecs
 import os
@@ -8,7 +8,7 @@ import time
 import urllib
 
 
-class crawler_caac():
+class Crawler():
 
     year = 0
     baseUrl = ''
@@ -21,7 +21,7 @@ class crawler_caac():
     def __init__(self, year):
         self.year = year
         self.baseUrl = self.baseUrl_f.format(year)
-        self.resultDir = project_config.resultDir.format(year).format(self.year)
+        self.resultDir = ProjectConfig.CRAWLER_RESULT_DIR.format(self.year)
 
     def run(self):
         # prepare the result directory
@@ -108,6 +108,8 @@ class crawler_caac():
     def generateDb(self):
         """ generate a db file from crawled html files """
 
+        dbFilepath = ProjectConfig.getCrawledDbFilepath(self.year)
+
         universityMap = {
             # '001': '國立臺灣大學',
             # ...
@@ -149,8 +151,6 @@ class crawler_caac():
             break
 
         # generate db
-        dbFilepath = os.path.join(self.resultDir, 'sqlite3.db')
-
         if os.path.isfile(dbFilepath):
             os.remove(dbFilepath)
 
