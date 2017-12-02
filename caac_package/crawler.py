@@ -40,7 +40,7 @@ class Crawler():
         content = self.getPage(url)
 
         if content is None:
-            raise Exception('Fail to find /ColPost/collegeList.htm from {}'.format(url))
+            raise Exception('Fail to fetch {}'.format(url))
         else:
             links = pq(content)('a')
             for link in links.items():
@@ -51,6 +51,9 @@ class Crawler():
                     else:
                         self.collegeListUrl = self.simplifyUrl(self.baseUrl + href)
                     self.projectBaseUrl = self.collegeListUrl[:-len('/collegeList.htm')+1]
+
+        if self.projectBaseUrl == '':
+            raise Exception('Fail to find /ColPost/collegeList.htm from {}'.format(url))
 
     def fetchAndSaveCollegeList(self):
         departmentLists = []
