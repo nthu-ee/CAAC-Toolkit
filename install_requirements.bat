@@ -1,5 +1,5 @@
 @ECHO OFF
 
-pip install -U -r requirements.txt
+python -m pip install -U -r requirements.txt
 
 PAUSE
