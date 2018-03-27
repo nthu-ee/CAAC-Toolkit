@@ -11,8 +11,13 @@ import urllib
 class Crawler():
 
     year = 0
-    baseUrl = ''
-    baseUrl_f = 'https://www.caac.ccu.edu.tw/caac{}/'
+    baseUrl = '' # generated in processCollegeListUrl()
+
+    baseUrls = [] # generated in __init__()
+    baseUrls_f = [
+        'https://www.caac.ccu.edu.tw/caac{}/',
+        'https://www.caac.ccu.edu.tw/apply{}/', # since year 107
+    ]
 
     projectBaseUrl = ''
     collegeListUrl = ''
@@ -20,7 +25,7 @@ class Crawler():
 
     def __init__(self, year):
         self.year = year
-        self.baseUrl = self.baseUrl_f.format(year)
+        self.baseUrls = [baseUrl_f.format(year) for baseUrl_f in self.baseUrls_f]
         self.resultDir = ProjectConfig.CRAWLER_RESULT_DIR.format(self.year)
 
     def run(self):
@@ -36,21 +41,29 @@ class Crawler():
     def processCollegeListUrl(self):
         """ set the URL of 大學個人申請入學招生 第一階段篩選結果 """
 
-        url = self.baseUrl + 'result.php'
-        content = self.getPage(url)
+        for baseUrl in self.baseUrls:
+            url = baseUrl + 'result.php'
+            content = self.getPage(url)
 
-        if content is None:
-            raise Exception('Fail to fetch {}'.format(url))
-        else:
-            links = pq(content)('a')
-            for link in links.items():
-                href = link.attr('href')
-                if '/ColPost/collegeList.htm' in href:
-                    if self.isUrl(href):
-                        self.collegeListUrl = href
-                    else:
-                        self.collegeListUrl = self.simplifyUrl(self.baseUrl + href)
-                    self.projectBaseUrl = self.collegeListUrl[:-len('/collegeList.htm')+1]
+            if content is not None:
+                self.baseUrl = baseUrl
+                print('Successfully fetch {}'.format(url))
+                break
+
+            print('Fail to fetch {}'.format(url))
+
+        if self.baseUrl == '':
+            raise Exception('Fail to fetch all possible URLs')
+
+        links = pq(content)('a')
+        for link in links.items():
+            href = link.attr('href')
+            if '/ColPost/collegeList.htm' in href:
+                if self.isUrl(href):
+                    self.collegeListUrl = href
+                else:
+                    self.collegeListUrl = self.simplifyUrl(self.baseUrl + href)
+                self.projectBaseUrl = self.collegeListUrl[:-len('/collegeList.htm')+1]
 
         if self.projectBaseUrl == '':
             raise Exception('Fail to find /ColPost/collegeList.htm from {}'.format(url))
