@@ -2,4 +2,5 @@
 --index https://pypi.python.org/simple/
 
 pyquery
+requests
 XlsxWriter

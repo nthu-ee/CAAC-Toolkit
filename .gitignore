@@ -7,3 +7,6 @@ __pycache__
 *.rar5
 *.csv
 *.xlsx
+
+# Office temporary files
+~$*

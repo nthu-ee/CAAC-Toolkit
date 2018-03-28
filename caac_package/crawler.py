@@ -6,6 +6,7 @@ import re
 import sqlite3
 import time
 import urllib
+import requests
 
 
 class Crawler():
@@ -15,7 +16,7 @@ class Crawler():
 
     baseUrls = [] # generated in __init__()
     baseUrls_f = [
-        'https://www.caac.ccu.edu.tw/caac{}/',
+        'https://www.caac.ccu.edu.tw/caac{}/', # no longer used
         'https://www.caac.ccu.edu.tw/apply{}/', # since year 107
     ]
 
@@ -58,12 +59,17 @@ class Crawler():
         links = pq(content)('a')
         for link in links.items():
             href = link.attr('href')
-            if '/ColPost/collegeList.htm' in href:
-                if self.isUrl(href):
-                    self.collegeListUrl = href
-                else:
-                    self.collegeListUrl = self.simplifyUrl(self.baseUrl + href)
-                self.projectBaseUrl = self.collegeListUrl[:-len('/collegeList.htm')+1]
+            m = re.search("system/{}apply_Sieve_([^/]+)/".format(self.year), href)
+
+            if m is not None:
+                r = requests.get(self.baseUrl + m.group(0) + 'apply_sieve_html_1.php')
+                # the redirected URL like the following one
+                # https://www.caac.ccu.edu.tw/CacLink/apply107/107apply_Sieve_pg58e3q/html_sieve_107yaya/ColPost/collegeList.htm
+                self.collegeListUrl = r.url
+
+                # stripped the trailing "collegeList.htm"
+                # all HTML files we interest in are under this URL (projectBaseUrl)
+                self.projectBaseUrl = self.collegeListUrl[:-len('collegeList.htm')]
 
         if self.projectBaseUrl == '':
             raise Exception('Fail to find /ColPost/collegeList.htm from {}'.format(url))
