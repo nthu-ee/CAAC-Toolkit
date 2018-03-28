@@ -16,7 +16,7 @@ class Crawler():
 
     baseUrls = [] # generated in __init__()
     baseUrls_f = [
-        'https://www.caac.ccu.edu.tw/caac{}/', # no longer used
+        # 'https://www.caac.ccu.edu.tw/caac{}/',
         'https://www.caac.ccu.edu.tw/apply{}/', # since year 107
     ]
 
