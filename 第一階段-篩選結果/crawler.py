@@ -14,13 +14,19 @@ parser.add_argument(
     default=Year.YEAR_CURRENT,
     help='The year of data to be processed. (ex: 2017 or 106 is the same)',
 )
+parser.add_argument(
+    '--projectBaseUrl',
+    type=str,
+    default='',
+    help='The (base) URL of the CAAC HTML page.',
+)
 args = parser.parse_args()
 
 year = Year.taiwanize(args.year)
 
 t_start = time.time()
 
-crawler = Crawler(year)
+crawler = Crawler(year, args.projectBaseUrl)
 crawler.run()
 
 t_end = time.time()

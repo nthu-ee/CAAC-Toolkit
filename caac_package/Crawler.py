@@ -6,73 +6,43 @@ import re
 import sqlite3
 import time
 import urllib
-import requests
 
 
 class Crawler():
 
     year = 0
-    baseUrl = '' # generated in processCollegeListUrl()
-
-    baseUrls = [] # generated in __init__()
-    baseUrls_f = [
-        # 'https://www.caac.ccu.edu.tw/caac{}/',
-        'https://www.caac.ccu.edu.tw/apply{}/', # since year 107
-    ]
-
     projectBaseUrl = ''
+
     collegeListUrl = ''
     resultDir = ''
 
-    def __init__(self, year):
+    def __init__(self, year, projectBaseUrl = ''):
         self.year = year
-        self.baseUrls = [baseUrl_f.format(year) for baseUrl_f in self.baseUrls_f]
         self.resultDir = ProjectConfig.CRAWLER_RESULT_DIR.format(self.year)
+
+        #----------------#
+        # projectBaseUrl #
+        #----------------#
+        self.projectBaseUrl = projectBaseUrl.strip()
+
+        if re.match(r"\.[a-zA-Z0-9_]+$", self.projectBaseUrl):
+            self.projectBaseUrl = os.path.dirname(self.projectBaseUrl)
+
+        self.projectBaseUrl = os.path.join(self.projectBaseUrl, '').format(self.year)
+
+        #----------------#
+        # collegeListUrl #
+        #----------------#
+        self.collegeListUrl = self.projectBaseUrl + 'collegeList.htm'
 
     def run(self):
         # prepare the result directory
         os.makedirs(self.resultDir, exist_ok=True)
 
-        self.processCollegeListUrl()
         filepaths = self.fetchAndSaveCollegeList()
         filepaths = self.fetchAndSaveDepartmentLists(filepaths)
         self.fetchAndSaveDepartmentApplys(filepaths)
         self.generateDb()
-
-    def processCollegeListUrl(self):
-        """ set the URL of 大學個人申請入學招生 第一階段篩選結果 """
-
-        for baseUrl in self.baseUrls:
-            url = baseUrl + 'result.php'
-            content = self.getPage(url)
-
-            if content is not None:
-                self.baseUrl = baseUrl
-                print('Successfully fetch {}'.format(url))
-                break
-
-            print('Fail to fetch {}'.format(url))
-
-        if self.baseUrl == '':
-            raise Exception('Fail to fetch all possible URLs')
-
-        links = pq(content)('a')
-        for link in links.items():
-            href = link.attr('href')
-            m = re.search("system/{}apply_Sieve_([^/]+)/".format(self.year), href)
-
-            if m is not None:
-                r = requests.get(self.baseUrl + m.group(0) + 'apply_sieve_html_1.php')
-                # the redirected URL like the following one
-                # https://www.caac.ccu.edu.tw/CacLink/apply107/107apply_Sieve_pg58e3q/html_sieve_107yaya/ColPost/collegeList.htm
-                self.collegeListUrl = r.url
-
-                # stripped the trailing "collegeList.htm"
-                # all HTML files we interest in are under this URL (projectBaseUrl)
-                self.projectBaseUrl = self.collegeListUrl[:-len('collegeList.htm')]
-
-        if self.projectBaseUrl == '':
-            raise Exception('Fail to find /ColPost/collegeList.htm from {}'.format(url))
 
     def fetchAndSaveCollegeList(self):
         departmentLists = []
@@ -129,6 +99,8 @@ class Crawler():
 
     def generateDb(self):
         """ generate a db file from crawled html files """
+
+        print('[crawler_caac] Generating DB file...')
 
         dbFilepath = ProjectConfig.getCrawledDbFilepath(self.year)
 
@@ -262,9 +234,6 @@ class Crawler():
 
         with codecs.open(filename, mode, codec) as f:
             f.write(content)
-
-    def isUrl(self, url):
-        return '://' in url
 
     def simplifyUrl(self, url):
         url = re.sub(r'(^|/)./', r'\1', url)
