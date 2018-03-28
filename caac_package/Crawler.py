@@ -1,5 +1,6 @@
 from .ProjectConfig import ProjectConfig
 from pyquery import PyQuery as pq
+from urllib.parse import urljoin
 import codecs
 import os
 import re
@@ -25,10 +26,13 @@ class Crawler():
         #----------------#
         self.projectBaseUrl = projectBaseUrl.strip()
 
-        if re.match(r"\.[a-zA-Z0-9_]+$", self.projectBaseUrl):
+        if re.search(r"\.[a-zA-Z0-9_]+$", self.projectBaseUrl):
             self.projectBaseUrl = os.path.dirname(self.projectBaseUrl)
 
-        self.projectBaseUrl = os.path.join(self.projectBaseUrl, '').format(self.year)
+        # ensure trailing backslash
+        self.projectBaseUrl = self.projectBaseUrl.rstrip('/') + '/'
+
+        self.projectBaseUrl = self.projectBaseUrl.format(self.year)
 
         #----------------#
         # collegeListUrl #
@@ -91,7 +95,7 @@ class Crawler():
                 return f.read()
 
         if log is True:
-            print('[Fetching] ' + url)
+            print('[Fetch] ' + url)
 
         content = self.getPage(url)
         self.writeFile(filepathAbsolute, content)
