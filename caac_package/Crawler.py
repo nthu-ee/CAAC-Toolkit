@@ -1,6 +1,5 @@
 from .ProjectConfig import ProjectConfig
 from pyquery import PyQuery as pq
-from urllib.parse import urljoin
 import codecs
 import os
 import re
