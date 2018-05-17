@@ -141,6 +141,10 @@ sheetFmts = {
     'applyState-notYet': {
         'bg_color': '#D0D0D0',
     },
+    # 榜單狀態：已分發
+    'applyState-dispatched': {
+        'bg_color': '#99D8FF',
+    },
 }
 
 sheetData = [
@@ -185,8 +189,14 @@ for admissionId in admissionIds:
 
             universityName = universityMap[universityId]
             departmentName = departmentMap[departmentId]
-            applyState = personResult[departmentId] # ex: spare-10, notYet
-            applyType = applyState.split('-')[0]    # ex: spare,    notYet
+            departmentResult = personResult[departmentId]
+
+            isDispatched = departmentResult['isDispatched']
+            applyState = departmentResult['applyState'] # ex: 'spare-10'
+            applyType = applyState.split('-')[0]        # ex: 'spare'
+
+            if isDispatched:
+                applyType = 'dispatched'
 
             row.append({
                 'text': '{}\n{}'.format(universityName, departmentName),
@@ -200,7 +210,10 @@ for admissionId in admissionIds:
                 ,
             })
             row.append({
-                'text': caac_funcs.normalizeApplyStateE2C(applyState),
+                'text': '{} {}'.format(
+                    '👑' if isDispatched else '',
+                    caac_funcs.normalizeApplyStateE2C(applyState)
+                ).strip(),
                 'fmts': [
                     'applyState',
                     'applyState-{}'.format(applyType),

@@ -92,9 +92,15 @@ def parseFreshmanTw(content=''):
             personResult = {
                 admissionId: { '_name': personName },
             }
+
+        isDispatched = 'crown' in tr.html()
         department = tr('td a').attr('href').rstrip('/').split('/')[-1].strip()
         applyState = tr('td span').text().strip()
-        personResult[admissionId][department] = normalizeApplyStateC2E(applyState)
+
+        personResult[admissionId][department] = {
+            'isDispatched': isDispatched,
+            'applyState': normalizeApplyStateC2E(applyState),
+        }
     peopleResult.update(personResult)
 
     return peopleResult
