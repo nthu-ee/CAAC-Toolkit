@@ -1,5 +1,10 @@
 # This is an implicit value, here for clarity
 --index https://pypi.python.org/simple/
 
+# tested version:
+# Python: 3.6, 3.7
+# pandas: 0.23.4
+# pyquery: 1.4.0
+
+pandas
 pyquery
-XlsxWriter

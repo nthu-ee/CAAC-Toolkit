@@ -1,9 +1,9 @@
 import argparse
 import datetime
 import os
+import pandas as pd
 import sys
 import time
-import xlsxwriter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from caac_package.ProjectConfig import ProjectConfig
@@ -224,9 +224,10 @@ for admissionId in admissionIds:
         print('[Warning] Cannot find the result for admission ID: {}'.format(admissionId))
 
 # output the results (xlsx)
-with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
+with pd.ExcelWriter(resultFilepath, engine='xlsxwriter') as writer:
+    workbook = writer.book
 
-    worksheet = xlsxfile.add_worksheet('第二階段-交叉查榜')
+    worksheet = workbook.add_worksheet('第二階段-交叉查榜')
     worksheet.freeze_panes(1, 2)
 
     rowCnt = 0
@@ -243,7 +244,7 @@ with xlsxwriter.Workbook(resultFilepath) as xlsxfile:
             worksheet.write(
                 rowCnt, colCnt,
                 col['text'],
-                xlsxfile.add_format(cellFmt)
+                workbook.add_format(cellFmt)
             )
             colCnt += 1
         rowCnt += 1

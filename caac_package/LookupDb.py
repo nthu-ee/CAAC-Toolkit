@@ -1,6 +1,6 @@
 import os
+import pandas as pd
 import sqlite3
-import xlsxwriter
 
 
 class LookupDb():
@@ -84,15 +84,17 @@ class LookupDb():
 
     def writeOutResult(self, outputFile, lookupResult, args):
         # output the results (xlsx)
-        with xlsxwriter.Workbook(outputFile) as xlsxfile:
-            cellFormat = xlsxfile.add_format({
+        with pd.ExcelWriter(outputFile, engine='xlsxwriter') as writer:
+            workbook = writer.book
+
+            cellFormat = workbook.add_format({
                 'align': 'left',
                 'valign': 'vcenter',
                 'text_wrap': True,
                 'font_size': 9,
             })
 
-            worksheet = xlsxfile.add_worksheet('第一階段-篩選結果')
+            worksheet = workbook.add_worksheet('第一階段-篩選結果')
             worksheet.freeze_panes(1, 1)
 
             worksheet.write_row(
