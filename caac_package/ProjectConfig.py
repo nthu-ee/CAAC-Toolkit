@@ -1,10 +1,22 @@
 import os
+import sys
 from .Year import Year
 
 
 class ProjectConfig():
 
-    __script_dir__ = os.path.dirname(os.path.abspath(__file__))
+    # @see https://pythonhosted.org/PyInstaller/runtime-information.html
+    # we are running in a bundle
+    if getattr(sys, 'frozen', False):
+        # we are running in a one-file bundle
+        if getattr(sys, 'executable', ''):
+            __script_dir__ = os.path.dirname(os.path.abspath(sys.executable))
+        # we are running in a one-folder bundle
+        else:
+            __script_dir__ = sys._MEIPASS
+    # we are running in a normal Python environment
+    else:
+        __script_dir__ = os.path.dirname(os.path.abspath(__file__))
 
     # followings are adjust-able
     ROOT_DIR = os.path.join(__script_dir__, '..')
