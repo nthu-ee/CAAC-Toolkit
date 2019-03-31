@@ -1,12 +1,12 @@
 from .ProjectConfig import ProjectConfig
 from pyquery import PyQuery as pq
 import codecs
+import lxml
 import os
 import re
 import sqlite3
 import time
 import urllib
-import lxml
 
 
 class Crawler():
