@@ -6,6 +6,7 @@ import re
 import sqlite3
 import time
 import urllib
+import lxml
 
 
 class Crawler():
@@ -50,8 +51,14 @@ class Crawler():
     def fetchAndSaveCollegeList(self):
         departmentLists = []
 
-        content = self.fetchAndSavePage(self.collegeListUrl, overwrite=False, log=True)
-        links = pq(content)('a')
+        # the user may give a wrong URL in the last run
+        # in that case, we overwrite the old file and run again
+        try:
+            content = self.fetchAndSavePage(self.collegeListUrl, overwrite=False, log=True)
+            links = pq(content)('a')
+        except lxml.etree.ParserError:
+            content = self.fetchAndSavePage(self.collegeListUrl, overwrite=True, log=True)
+            links = pq(content)('a')
 
         for link in links.items():
             href = link.attr('href')
