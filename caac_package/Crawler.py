@@ -110,8 +110,6 @@ class Crawler():
     def generateDb(self):
         """ generate a db file from crawled html files """
 
-        print('[crawler_caac] Generating DB file...')
-
         dbFilepath = ProjectConfig.getCrawledDbFilepath(self.year)
 
         universityMap = {
@@ -126,6 +124,8 @@ class Crawler():
             # '001012': [ '10006201', ... ],
             # ...
         }
+
+        print('[crawler_caac] DB Gen: gathering data from the source...')
 
         # build universityMap
         with open(os.path.join(self.resultDir, 'collegeList.htm'), 'r', encoding='utf-8') as f:
@@ -153,6 +153,8 @@ class Crawler():
                             departmentToAdmittees[departmentId] = []
                         departmentToAdmittees[departmentId].append(found.group(1))
             break
+
+        print('[crawler_caac] DB Gen: filling data into the DB file.')
 
         # generate db
         if os.path.isfile(dbFilepath):
@@ -184,30 +186,25 @@ class Crawler():
             ON qualified (admissionId);
         ''')
 
-        print('[crawler_caac] DB file is successfully initiated.')
-
         # insert data into db
-        for universityId, universityName in universityMap.items():
-            conn.execute('''
-                INSERT INTO universities (id, name)
-                VALUES (?, ?)
-            ''', (universityId, universityName,))
-        for departmentId, departmentName in departmentMap.items():
-            conn.execute('''
-                INSERT INTO departments (id, name)
-                VALUES (?, ?)
-            ''', (departmentId, departmentName,))
+        conn.executemany('''
+            INSERT INTO universities (id, name)
+            VALUES (?, ?);
+        ''', universityMap.items())
+        conn.executemany('''
+            INSERT INTO departments (id, name)
+            VALUES (?, ?);
+        ''', departmentMap.items())
         for departmentId, admissionIds in departmentToAdmittees.items():
-            for admissionId in admissionIds:
-                conn.execute('''
-                    INSERT INTO qualified (departmentId, admissionId)
-                    VALUES (?, ?)
-                ''', (departmentId, admissionId,))
+            conn.executemany('''
+                INSERT INTO qualified (departmentId, admissionId)
+                VALUES (?, ?);
+            ''', zip([departmentId] * len(admissionIds), admissionIds))
 
         conn.commit()
         conn.close()
 
-        print('[crawler_caac] DB file is successfully filled.')
+        print('[crawler_caac] DB Gen: done.')
 
     def getPage(self, *args):
         """ get a certain web page """
