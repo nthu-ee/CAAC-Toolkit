@@ -175,13 +175,16 @@ class Crawler():
         conn.execute('''
             CREATE TABLE IF NOT EXISTS qualified (
                 departmentId    CHAR(6)    NOT NULL,
-                admissionId     CHAR(8)    NOT NULL
+                admissionId     CHAR(8)    NOT NULL,
+                FOREIGN KEY(departmentId) REFERENCES departments(id)
             );
         ''')
         conn.execute('''
             CREATE INDEX IF NOT EXISTS admissionId_index
             ON qualified (admissionId);
         ''')
+
+        print('[crawler_caac] DB file is successfully initiated.')
 
         # insert data into db
         for universityId, universityName in universityMap.items():
@@ -204,7 +207,7 @@ class Crawler():
         conn.commit()
         conn.close()
 
-        print('[crawler_caac] DB file is successfully generated.')
+        print('[crawler_caac] DB file is successfully filled.')
 
     def getPage(self, *args):
         """ get a certain web page """
