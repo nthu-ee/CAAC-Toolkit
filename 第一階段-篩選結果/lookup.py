@@ -4,43 +4,41 @@ import datetime
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from caac_package.LookupDb import LookupDb
 from caac_package.ProjectConfig import ProjectConfig
 from caac_package.Year import Year
 import caac_package.functions as caac_funcs
 
-parser = argparse.ArgumentParser(description='A database lookup utility for CAAC website.')
+parser = argparse.ArgumentParser(description="A database lookup utility for CAAC website.")
 parser.add_argument(
-    '--year',
+    "--year",
     type=int,
     default=Year.YEAR_CURRENT,
-    help='The year of data to be processed. (ex: 2017 or 106 is the same)',
+    help="The year of data to be processed. (ex: 2017 or 106 is the same)",
 )
 parser.add_argument(
-    '--admissionIds',
-    default='',
-    help='Admission IDs that are going to be looked up. (separate by commas)',
+    "--admissionIds",
+    default="",
+    help="Admission IDs that are going to be looked up. (separate by commas)",
 )
 parser.add_argument(
-    '--departmentIds',
-    default='',
-    help='Department IDs that are going to be looked up. (separate by commas)',
+    "--departmentIds",
+    default="",
+    help="Department IDs that are going to be looked up. (separate by commas)",
 )
 parser.add_argument(
-    '--output',
-    default=datetime.datetime.now().strftime('result_%Y%m%d_%H%M%S.xlsx'),
-    help='The file to output results. (.xlsx file)',
+    "--output",
+    default=datetime.datetime.now().strftime("result_%Y%m%d_%H%M%S.xlsx"),
+    help="The file to output results. (.xlsx file)",
 )
-parser.add_argument(
-    '--outputFormat',
-    default='',
-    help='Leave it blank or "NthuEe"',
-)
+parser.add_argument("--outputFormat", default="", help='Leave it blank or "NthuEe"')
 args = parser.parse_args()
 
 year = Year.taiwanize(args.year)
-resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == '.xlsx' else args.output + '.xlsx'
+resultFilepath = (
+    args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else args.output + ".xlsx"
+)
 dbFilepath = ProjectConfig.getCrawledDbFilepath(year)
 
 # variables
@@ -54,13 +52,13 @@ lookup.loadDb()
 
 # do lookup
 if args.admissionIds:
-    admissionIds = caac_funcs.listUnique(args.admissionIds.split(','), clear=True)
+    admissionIds = caac_funcs.listUnique(args.admissionIds.split(","), clear=True)
     result = lookup.lookupByAdmissionIds(admissionIds)
     results.update(result)
 
 # do lookup
 if args.departmentIds:
-    departmentIds = caac_funcs.listUnique(args.departmentIds.split(','), clear=True)
+    departmentIds = caac_funcs.listUnique(args.departmentIds.split(","), clear=True)
     result = lookup.lookupByDepartmentIds(departmentIds)
     results.update(result)
 
@@ -72,14 +70,10 @@ if os.path.isfile(resultFilepath):
     os.remove(resultFilepath)
 
 # write result to a xlsx file
-writeOutMethod = 'writeOutResult{}'.format(args.outputFormat)
+writeOutMethod = "writeOutResult{}".format(args.outputFormat)
 try:
-    getattr(lookup, writeOutMethod)(
-        resultFilepath,
-        results,
-        args,
-    )
+    getattr(lookup, writeOutMethod)(resultFilepath, results, args)
 except:
-    raise Exception('Unknown option: --outputFormat={}'.format(args.outputFormat))
+    raise Exception("Unknown option: --outputFormat={}".format(args.outputFormat))
 
 print(results)

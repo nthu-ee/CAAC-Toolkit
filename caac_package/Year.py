@@ -1,7 +1,7 @@
 import datetime
 
 
-class Year():
+class Year:
 
     YEAR_BEGIN = 1911
 

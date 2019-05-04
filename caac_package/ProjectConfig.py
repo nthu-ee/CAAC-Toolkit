@@ -3,13 +3,13 @@ import sys
 from .Year import Year
 
 
-class ProjectConfig():
+class ProjectConfig:
 
     # @see https://pythonhosted.org/PyInstaller/runtime-information.html
     # we are running in a bundle
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # we are running in a one-file bundle
-        if getattr(sys, 'executable', ''):
+        if getattr(sys, "executable", ""):
             __script_dir__ = os.path.dirname(os.path.abspath(sys.executable))
         # we are running in a one-folder bundle
         else:
@@ -19,10 +19,10 @@ class ProjectConfig():
         __script_dir__ = os.path.dirname(os.path.abspath(__file__))
 
     # followings are adjust-able
-    ROOT_DIR = os.path.join(__script_dir__, '..')
-    DATA_DIR = os.path.join(ROOT_DIR, 'data')
-    CRAWLER_RESULT_DIR = os.path.join(DATA_DIR, 'crawler_{}')
-    CRAWLED_DB_FILENAME = 'sqlite3.db'
+    ROOT_DIR = os.path.join(__script_dir__, "..")
+    DATA_DIR = os.path.join(ROOT_DIR, "data")
+    CRAWLER_RESULT_DIR = os.path.join(DATA_DIR, "crawler_{}")
+    CRAWLED_DB_FILENAME = "sqlite3.db"
 
     @classmethod
     def getCrawledDbFilepath(self, year):
@@ -30,7 +30,4 @@ class ProjectConfig():
 
         year = Year.taiwanize(year)
 
-        return os.path.join(
-            self.CRAWLER_RESULT_DIR.format(year),
-            self.CRAWLED_DB_FILENAME,
-        )
+        return os.path.join(self.CRAWLER_RESULT_DIR.format(year), self.CRAWLED_DB_FILENAME)
