@@ -49,7 +49,7 @@ def getPage(*args):
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                     "Accept-Encoding": "deflate",
                     "Accept-Language": "zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36",
                     "Host": urlParsed.netloc,
                     "Referer": "{uri.scheme}://{uri.netloc}".format(uri=urlParsed),
                 }
@@ -68,40 +68,56 @@ def getPage(*args):
         time.sleep(1)
 
 
-def parseFreshmanTw(content=""):
+def parseWwwComTw(content=""):
     peopleResult = {
         # '准考證號': {
         #     '_name': '考生姓名',
-        #     '系所編號1': 'primary',
+        #     '系所編號1': {
+        #         '_name': '國立臺灣大學醫學系(繁星第八類)',
+        #         'isDispatched': False,
+        #         'applyState': 'primary',
+        #     }
         #     ...
         # },
         # ...
     }
 
+    admissionIdRegex = r"\b(\d{8})\b"
+    departmentIdRegex = r"_(\d{6,7})_"
+
     content = content.replace("\r", "").replace("\n", " ")  # sanitization
-    table = pq(content)("#cross_dept tbody")  # get the result html table
-    rows = table("tr")
+    personRows = pq(content)("#mainContent table:first > tr")  # get the result html table
 
-    personResult = {}
-    for tr in rows.items():
-        findAdmissionId = re.search(r"\b(\d{8})\b", tr.text())
-        isFirstRow = findAdmissionId is not None
-        if isFirstRow:
-            peopleResult.update(personResult)
-            admissionId = findAdmissionId.group(1)
-            # remove the potential spaces in person names
-            personName = re.sub(r"[\s　]+", "", tr("td:nth-child(2)").text())
-            personResult = {admissionId: {"_name": personName}}
+    for personRow in personRows.items():
+        findAdmissionId = re.search(admissionIdRegex, personRow.text())
 
-        isDispatched = "crown" in tr.html()
-        department = tr("td a").attr("href").rstrip("/").split("/")[-1].strip()
-        applyState = tr("td span").text().strip()
+        if findAdmissionId is None:
+            continue
 
-        personResult[admissionId][department] = {
-            "isDispatched": isDispatched,
-            "applyState": normalizeApplyStateC2E(applyState),
-        }
-    peopleResult.update(personResult)
+        admissionId = findAdmissionId.group(1)
+        personName = personRow("td:nth-child(4)").text().strip()
+
+        personResult = {admissionId: {"_name": personName}}
+
+        applyTableRows = personRow("td:nth-child(5) table:first > tr")
+
+        for applyTableRow in applyTableRows.items():
+            findDepartmentId = re.search(departmentIdRegex, applyTableRow.html())
+
+            if findDepartmentId is None:
+                continue
+
+            departmentId = findDepartmentId.group(1)
+            departmentName = applyTableRow("td:nth-child(2)").text().strip()
+            applyState = applyTableRow("td:nth-child(3)").text().strip()
+
+            personResult[admissionId][departmentId] = {
+                "_name": departmentName,
+                "isDispatched": "分發錄取" in applyTableRow.html(),
+                "applyState": normalizeApplyStateC2E(applyState),
+            }
+
+        peopleResult.update(personResult)
 
     return peopleResult
 
@@ -118,12 +134,9 @@ def normalizeApplyStateC2E(chinese):
         order = "?" if order is None else order.group(1)
         return "spare-{}".format(order)
     # 落榜
-    if "落" in chinese or "" == chinese:
+    if "落" in chinese:
         return "failed"
-    # 尚未放榜
-    if "未" in chinese and "放" in chinese:
-        return "notYet"
-    # WTF?
+    # 未知（無資料）
     return "unknown"
 
 

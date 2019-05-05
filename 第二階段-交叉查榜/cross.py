@@ -2,6 +2,7 @@ import argparse
 import datetime
 import os
 import pandas as pd
+import re
 import sys
 import time
 
@@ -18,9 +19,6 @@ parser.add_argument(
     help="The year of data to be processed. (ex: 2017 or 106 is the same)",
 )
 parser.add_argument(
-    "--batchSize", type=int, default=10, help="Fetch how many people from the internet at once?"
-)
-parser.add_argument(
     "--output",
     default=datetime.datetime.now().strftime("result_%Y%m%d_%H%M%S.xlsx"),
     help="The file to output results. (.xlsx file)",
@@ -31,20 +29,9 @@ year = Year.taiwanize(args.year)
 resultFilepath = (
     args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else args.output + ".xlsx"
 )
-dbFilepath = ProjectConfig.getCrawledDbFilepath(year)
 
 # variables
-admissionIds = []  # 學測准考證
-
-universityMap = {
-    # '001': '國立臺灣大學',
-    # ...
-}
-departmentMap = {
-    # '001012': '中國文學系',
-    # ...
-}
-lookupResults = {
+crossResults = {
     # '准考證號': {
     #     '_name': '考生姓名',
     #     '系所編號1': 'primary',
@@ -54,16 +41,25 @@ lookupResults = {
 }
 
 
-def nthuSort(departmentId):
-    global universityMap, departmentMap
+def splitUniversityNameAndDepartmentName(fullName):
+    findUniverityName = re.search(r"((?:[^\s]+)(?:大學|學院))(.*)", fullName)
+
+    if findUniverityName is None:
+        return None
+
+    return [findUniverityName.group(1).strip(), findUniverityName.group(2).strip()]
+
+
+def nthuSort(department):
+    departmentId, departmentResult = department
 
     # special attribute like '_name'
     if departmentId[0] == "_":
         return departmentId
 
-    universityId = departmentId[:3]
-    universityName = universityMap[universityId]
-    departmentName = departmentMap[departmentId]
+    universityName, departmentName = splitUniversityNameAndDepartmentName(
+        personResult[departmentId]["_name"]
+    )
 
     # 清華大學 be the later one
     if "清華大學" in universityName:
@@ -81,30 +77,31 @@ def nthuSort(departmentId):
 
 t_start = time.time()
 
-universityMap, departmentMap = caac_funcs.loadDb(dbFilepath)
-
-with open("admission_ids.txt", "r") as f:
-    admissionIds = f.read().split()
+with open("department_ids.txt", "r") as f:
+    departmentIds = f.read().split()
+    # trim spaces
+    departmentIds = [departmentId.strip() for departmentId in departmentIds]
     # filter out those are not integers
-    admissionIds = list(filter(lambda x: caac_funcs.canBeInt(x), admissionIds))
+    departmentIds = list(filter(lambda x: caac_funcs.canBeInt(x), departmentIds))
     # unique
-    admissionIdsUnique = list(set(admissionIds))
+    departmentIdsUnique = list(set(departmentIds))
 
-# fetch data from the API
+# fetch html content
 apiRetryInterval = 5
-apiUrlFormat = "https://freshman.tw/cross/{}/numbers/{}"
-for admissionId_batch in caac_funcs.batch(admissionIdsUnique, args.batchSize):
-    apiUrl = apiUrlFormat.format(year, ",".join(admissionId_batch))
+apiUrlFormat = "https://www.com.tw/cross/check_{departmentId}_NO_0_{year}_0_3.html"
+for departmentId in departmentIdsUnique:
+    apiUrl = apiUrlFormat.format(departmentId=departmentId, year=year)
+
     while True:
         content = caac_funcs.getPage(apiUrl)
-        if content is None or "負載過大" in content:
-            print("網站負載過大，{}秒後自動重試。".format(apiRetryInterval))
+        print(f"[Fetching departmentId ID] {departmentId}")
+
+        if content is None:
+            print(f"網站負載過大，{apiRetryInterval}秒後自動重試。")
             time.sleep(apiRetryInterval)
         else:
+            crossResults.update(caac_funcs.parseWwwComTw(content))
             break
-    batchResults = caac_funcs.parseFreshmanTw(content)
-    lookupResults.update(batchResults)
-    print("[Fetched by admission IDs] {}".format(", ".join(admissionId_batch)))
 
 sheetFmts = {
     "base": {"align": "left", "valign": "vcenter", "text_wrap": 1, "font_size": 9},
@@ -120,8 +117,8 @@ sheetFmts = {
     "applyState-spare": {"bg_color": "#FFFF99"},
     # 榜單狀態：落榜
     "applyState-failed": {"bg_color": "#FF9999"},
-    # 榜單狀態：尚未公布
-    "applyState-notYet": {"bg_color": "#D0D0D0"},
+    # 榜單狀態：未知（無資料）
+    "applyState-unknown": {"bg_color": "#D0D0D0"},
     # 榜單狀態：已分發
     "applyState-dispatched": {"bg_color": "#99D8FF"},
 }
@@ -150,57 +147,66 @@ sheetData = [
 ]
 # fmt: on
 
+# get a sorted version crossResults by its key (admissionId)
+crossResultsSorted = [(key, crossResults[key]) for key in sorted(crossResults.keys())]
+
 # construct sheetData
-for admissionId in admissionIds:
-    if admissionId in lookupResults:
-        row = []
-        personResult = lookupResults[admissionId]
+for crossResult in crossResultsSorted:
+    admissionId, personResult = crossResult
 
-        row.append({"text": int(admissionId)})
-        row.append({"text": personResult["_name"]})
+    row = []
+    row.append({"text": admissionId})
+    row.append({"text": personResult["_name"]})
 
-        # we iterate the results in the order of department ID
-        departmentIds = sorted(personResult.keys(), key=nthuSort)
-        for departmentId in departmentIds:
-            # special attribute like '_name'
-            if departmentId[0] == "_":
-                continue
+    # we hope show NTHU's result as the last
+    # so we construct a sorted departmentIds to be used later
+    personResultSorted = sorted(personResult.items(), key=nthuSort)
+    departmentIdsSorted = map(
+        lambda department: department[0],
+        filter(lambda department: caac_funcs.canBeInt(department[0]), personResultSorted),
+    )
 
-            universityId = departmentId[:3]
+    # we iterate the results in the order of department ID
+    for departmentId in departmentIdsSorted:
+        # special attribute like '_name'
+        if departmentId[0] == "_":
+            continue
 
-            universityName = universityMap[universityId]
-            departmentName = departmentMap[departmentId]
-            departmentResult = personResult[departmentId]
+        universityName, departmentName = splitUniversityNameAndDepartmentName(
+            personResult[departmentId]["_name"]
+        )
 
-            isDispatched = departmentResult["isDispatched"]
-            applyState = departmentResult["applyState"]  # ex: 'spare-10'
-            applyType = applyState.split("-")[0]  # ex: 'spare'
+        departmentResult = personResult[departmentId]
 
-            if isDispatched:
-                applyType = "dispatched"
+        isDispatched = departmentResult["isDispatched"]
+        applyState = departmentResult["applyState"]  # ex: 'spare-10'
+        applyType = applyState.split("-")[0]  # ex: 'spare'
 
-            row.append(
-                {
-                    "text": "{}\n{}".format(universityName, departmentName),
-                    "fmts": (
-                        # NTHU specialization
-                        ["department", "nthuEe"]
-                        if "清華大學" in universityName and "電機工程" in departmentName
-                        else ["department"]
-                    ),
-                }
-            )
-            row.append(
-                {
-                    "text": "{} {}".format(
-                        "👑" if isDispatched else "", caac_funcs.normalizeApplyStateE2C(applyState)
-                    ).strip(),
-                    "fmts": ["applyState", "applyState-{}".format(applyType)],
-                }
-            )
-        sheetData.append(row)
-    else:
-        print("[Warning] Cannot find the result for admission ID: {}".format(admissionId))
+        if isDispatched:
+            applyType = "dispatched"
+
+        row.append(
+            {
+                "text": f"{universityName}\n{departmentName}",
+                "fmts": (
+                    # NTHU specialization
+                    ["department", "nthuEe"]
+                    if "清華大學" in universityName and "電機工程" in departmentName
+                    else ["department"]
+                ),
+            }
+        )
+
+        applyStateIcon = "👑" if isDispatched else ""
+        applyStateNormalized = caac_funcs.normalizeApplyStateE2C(applyState)
+
+        row.append(
+            {
+                "text": f"{applyStateIcon} {applyStateNormalized}".strip(),
+                "fmts": ["applyState", f"applyState-{applyType}"],
+            }
+        )
+    sheetData.append(row)
 
 # output the results (xlsx)
 with pd.ExcelWriter(resultFilepath, engine="xlsxwriter") as writer:
@@ -226,4 +232,4 @@ with pd.ExcelWriter(resultFilepath, engine="xlsxwriter") as writer:
 
 t_end = time.time()
 
-print("[Done] It takes {} seconds.".format(t_end - t_start))
+print(f"[Done] It takes {t_end - t_start} seconds.")
