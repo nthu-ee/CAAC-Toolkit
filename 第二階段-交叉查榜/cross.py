@@ -46,6 +46,14 @@ crossResults = {
 
 
 def splitUniversityNameAndDepartmentName(fullName):
+    """
+    @brief 將 "國立臺灣大學機械工程學系" 轉換為 ['國立臺灣大學', '機械工程學系']
+
+    @param fullName The full university + department name string
+
+    @return [universityName, departmentName]
+    """
+
     findUniverityName = re.search(r"((?:[^\s]+)(?:大學|學院))(.*)", fullName)
 
     if findUniverityName is None:
