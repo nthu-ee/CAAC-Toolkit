@@ -252,7 +252,7 @@ with pd.ExcelWriter(resultFilepath, engine="xlsxwriter") as writer:
     workbook = writer.book
 
     worksheet = workbook.add_worksheet("第二階段-交叉查榜")
-    worksheet.freeze_panes(1, 2)
+    worksheet.freeze_panes(1, 3)
 
     rowCnt = 0
     for row in sheetData:
