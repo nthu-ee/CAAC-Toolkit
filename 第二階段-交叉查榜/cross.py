@@ -34,7 +34,11 @@ resultFilepath = (
 crossResults = {
     # '准考證號': {
     #     '_name': '考生姓名',
-    #     '系所編號1': 'primary',
+    #         '系所編號1': {
+    #             '_name': '國立臺灣大學醫學系(繁星第八類)',
+    #             'isDispatched': False,
+    #             'applyState': 'primary',
+    #         }
     #     ...
     # },
     # ...
@@ -54,7 +58,7 @@ def nthuSort(department):
     departmentId, departmentResult = department
 
     # special attribute like '_name'
-    if departmentId[0] == "_":
+    if departmentId.startswith("_"):
         return departmentId
 
     universityName, departmentName = splitUniversityNameAndDepartmentName(
@@ -141,6 +145,7 @@ sheetData = [
     [
         { 'text': '准考證號' },
         { 'text': '考生姓名' },
+        { 'text': '分發結果' },
         { 'text': '校系名稱' },
         { 'text': '榜單狀態' },
     ],
@@ -154,9 +159,35 @@ crossResultsSorted = [(key, crossResults[key]) for key in sorted(crossResults.ke
 for crossResult in crossResultsSorted:
     admissionId, personResult = crossResult
 
+    # '准考證號': {
+    #     '_name': '考生姓名',
+    #     '系所編號1': {
+    #         '_name': '國立臺灣大學醫學系(繁星第八類)',
+    #         'isDispatched': False,
+    #         'applyState': 'primary',
+    #     },
+    #     ...
+    # },
+    # ...
+
     row = []
     row.append({"text": admissionId})
     row.append({"text": personResult["_name"]})
+
+    # get the name of the dispatched department
+    departmentNameDispatched = [
+        v["_name"] for k, v in personResult.items() if not k.startswith("_") and v["isDispatched"]
+    ]
+
+    if departmentNameDispatched:
+        universityName, departmentName = splitUniversityNameAndDepartmentName(
+            departmentNameDispatched[0]
+        )
+        departmentNameDispatched = f"{universityName}\n{departmentName}"
+    else:
+        departmentNameDispatched = ""
+
+    row.append({"text": departmentNameDispatched})
 
     # we hope show NTHU's result as the last
     # so we construct a sorted departmentIds to be used later
@@ -169,7 +200,7 @@ for crossResult in crossResultsSorted:
     # we iterate the results in the order of department ID
     for departmentId in departmentIdsSorted:
         # special attribute like '_name'
-        if departmentId[0] == "_":
+        if departmentId.startswith("_"):
             continue
 
         universityName, departmentName = splitUniversityNameAndDepartmentName(
