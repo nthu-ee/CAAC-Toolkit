@@ -39,7 +39,7 @@ year = Year.taiwanize(args.year)
 resultFilepath = (
     args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else f"{args.output}.xlsx"
 )
-dbFilepath = ProjectConfig.getCrawledDbFilepath(year)
+dbFilepath = ProjectConfig.getCrawledDbFile(year, "apply_sieve")
 
 # variables
 results = {
@@ -73,7 +73,7 @@ if os.path.isfile(resultFilepath):
 writeOutMethod = f"writeOutResult{args.outputFormat}"
 try:
     getattr(lookup, writeOutMethod)(resultFilepath, results, args)
-except:
+except Exception:
     raise Exception(f"Unknown option: --outputFormat={args.outputFormat}")
 
 print(results)

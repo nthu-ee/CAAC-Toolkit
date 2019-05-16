@@ -7,6 +7,7 @@ import sys
 import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from caac_package.Crawler import Crawler
 from caac_package.ProjectConfig import ProjectConfig
 from caac_package.TaskQueue import TaskQueue
 from caac_package.Year import Year
@@ -106,7 +107,7 @@ def workerFetchPage(departmentId, year):
 
     while True:
         print(f"[Fetch department] {departmentId} : Begin")
-        content = caac_funcs.getPage(url)
+        content = Crawler.getPage(url)
 
         if content is None:
             print(f"[Fetch department] {departmentId} : Retry after {retryInterval} seconds...")

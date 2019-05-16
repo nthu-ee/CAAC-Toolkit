@@ -1,13 +1,13 @@
 from .ProjectConfig import ProjectConfig
 from .TaskQueue import TaskQueue
 from pyquery import PyQuery as pq
+import cloudscraper
 import codecs
 import lxml
 import os
 import re
 import sqlite3
 import time
-import urllib
 
 
 class Crawler:
@@ -18,9 +18,10 @@ class Crawler:
     collegeListUrl = ""
     resultDir = ""
 
-    def __init__(self, year, projectBaseUrl=""):
+    def __init__(self, year, apply_stage, projectBaseUrl=""):
         self.year = year
-        self.resultDir = ProjectConfig.CRAWLER_RESULT_DIR.format(self.year)
+        self.apply_stage = apply_stage
+        self.resultDir = ProjectConfig.getCrawledResultDir(self.year, self.apply_stage)
 
         # -------------- #
         # projectBaseUrl #
@@ -127,7 +128,7 @@ class Crawler:
     def generateDb(self):
         """ generate a db file from crawled html files """
 
-        dbFilepath = ProjectConfig.getCrawledDbFilepath(self.year)
+        dbFilepath = ProjectConfig.getCrawledDbFile(self.year, self.apply_stage)
 
         universityMap = {
             # '001': '國立臺灣大學',
@@ -240,30 +241,23 @@ class Crawler:
 
         print("[crawler_caac] DB Gen: done.")
 
-    def getPage(self, *args):
+    @classmethod
+    def getPage(self, url):
         """ get a certain web page """
 
         while True:
             # try to get page content
             try:
-                url = args[0]
-                urlParsed = urllib.parse.urlparse(url)
-                req = urllib.request.Request(
-                    *args,
-                    headers={
-                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                        "Accept-Encoding": "deflate",
-                        "Accept-Language": "zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4",
-                        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36",
-                        "Host": urlParsed.netloc,
-                        "Referer": "{uri.scheme}://{uri.netloc}".format(uri=urlParsed),
-                    }
+                scraper = cloudscraper.create_scraper(
+                    delay=None, interpreter="js2py", allow_brotli=True, debug=False
                 )
-                with urllib.request.urlopen(req) as resp:
-                    return resp.read().decode("utf-8")
+
+                return scraper.get(url).content.decode("utf-8")
             # somehow we cannot get the page content
             except Exception as e:
                 errMsg = str(e)
+                print(errMsg)
+
                 # HTTP error code
                 if errMsg.startswith("HTTP Error "):
                     return None

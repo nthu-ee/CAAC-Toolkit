@@ -35,31 +35,6 @@ def loadDb(dbFilepath):
     return universityMap, departmentMap
 
 
-def getPage(*args):
-    """ get a certain web page """
-
-    while True:
-        # try to get page content
-        try:
-            url = args[0]
-            scraper = cloudscraper.create_scraper(
-                delay=None, interpreter="js2py", allow_brotli=True, debug=False
-            )
-
-            return scraper.get(url).content.decode("utf-8")
-        # somehow we cannot get the page content
-        except Exception as e:
-            errMsg = str(e)
-            print(errMsg)
-
-            # HTTP error code
-            if errMsg.startswith("HTTP Error "):
-                return None
-
-        # fail to fetch the page, let's sleep for a while
-        time.sleep(1)
-
-
 def parseWwwComTw(content=""):
     peopleResult = {
         # '准考證號': {
