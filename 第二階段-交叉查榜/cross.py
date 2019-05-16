@@ -97,8 +97,9 @@ with open("department_ids.txt", "r") as f:
     departmentIds = [departmentId.strip() for departmentId in departmentIds]
     # filter out those are not integers
     departmentIds = list(filter(lambda x: caac_funcs.canBeInt(x), departmentIds))
-    # unique
-    departmentIdsUnique = list(set(departmentIds))
+
+# unique
+departmentIdsUnique = list(set(departmentIds))
 
 
 def workerFetchPage(departmentId, year):

@@ -87,7 +87,7 @@ class LookupDb:
 
         return self.lookupByAdmissionIds(admissionIds)
 
-    def writeOutResult(self, outputFile, lookupResult, args):
+    def writeOutSieveResult(self, outputFile, lookupResult, args):
         # output the results (xlsx)
         with pd.ExcelWriter(outputFile, engine="xlsxwriter") as writer:
             workbook = writer.book
@@ -101,7 +101,7 @@ class LookupDb:
             })
             # fmt: on
 
-            worksheet = workbook.add_worksheet("第一階段-篩選結果")
+            worksheet = workbook.add_worksheet("第一階段-篩選結果（甄選委員會）")
             worksheet.freeze_panes(1, 1)
 
             # fmt: off
@@ -135,7 +135,7 @@ class LookupDb:
 
                 rowCnt += 1
 
-    def writeOutResultNthuEe(self, outputFile, lookupResult, args):
+    def writeOutSieveResultNthuEe(self, outputFile, lookupResult, args):
         def nthuSort(departmentId):
             universityId = departmentId[:3]
 
@@ -161,4 +161,4 @@ class LookupDb:
             departmentIds.sort(key=nthuSort)
             postProcessedResults[admissionId] = departmentIds
 
-        self.writeOutResult(outputFile, postProcessedResults, args)
+        self.writeOutSieveResult(outputFile, postProcessedResults, args)
