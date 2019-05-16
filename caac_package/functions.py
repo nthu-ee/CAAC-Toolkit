@@ -8,7 +8,7 @@ import urllib
 
 def loadDb(dbFilepath):
     if not os.path.isfile(dbFilepath):
-        raise Exception("DB file does not exist: {}".format(dbFilepath))
+        raise Exception(f"DB file does not exist: {dbFilepath}")
 
     # connect to db file
     with sqlite3.connect(dbFilepath) as conn:
@@ -127,12 +127,12 @@ def normalizeApplyStateC2E(chinese):
     if "正" in chinese:
         order = re.search(r"(\d+)", chinese)
         order = "?" if order is None else order.group(1)
-        return "primary-{}".format(order)
+        return f"primary-{order}"
     # 備取
     if "備" in chinese:
         order = re.search(r"(\d+)", chinese)
         order = "?" if order is None else order.group(1)
-        return "spare-{}".format(order)
+        return f"spare-{order}"
     # 落榜
     if "落" in chinese:
         return "failed"
@@ -146,13 +146,13 @@ def normalizeApplyStateE2C(english):
         state = english.split("-")
         if state[1] == "?":
             state[1] = ""
-        return "正{}".format(state[1])
+        return f"正{state[1]}"
     # 備取
     if "spare" in english:
         state = english.split("-")
         if state[1] == "?":
             state[1] = ""
-        return "備{}".format(state[1])
+        return f"備{state[1]}"
     # 落榜
     if "failed" == english:
         return "落"

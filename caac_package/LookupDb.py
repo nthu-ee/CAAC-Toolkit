@@ -22,7 +22,7 @@ class LookupDb:
 
     def __init__(self, dbFilepath):
         if not os.path.isfile(dbFilepath):
-            raise Exception("DB file does not exist: {}".format(dbFilepath))
+            raise Exception(f"DB file does not exist: {dbFilepath}")
 
         self.conn = sqlite3.connect(dbFilepath)
 
@@ -122,15 +122,13 @@ class LookupDb:
                 for departmentId in departmentIds:
                     universityId = departmentId[:3]
                     applieds.append(
-                        "{}\n{}".format(
-                            self.universityMap[universityId], self.departmentMap[departmentId]
-                        )
+                        f"{self.universityMap[universityId]}\n{self.departmentMap[departmentId]}"
                     )
 
                 # fmt: off
                 worksheet.write_row(
                     rowCnt, 0,
-                    [ int(admissionId), *applieds ],
+                    [int(admissionId), *applieds],
                     cellFormat
                 )
                 # fmt: on

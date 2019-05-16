@@ -33,4 +33,4 @@ crawler.run()
 
 t_end = time.time()
 
-print("[Done] It takes {} seconds.".format(t_end - t_start))
+print(f"[Done] It takes {t_end - t_start} seconds.")

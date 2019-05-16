@@ -114,11 +114,11 @@ class Crawler:
         if not overwrite and os.path.isfile(filepathAbsolute):
             with open(filepathAbsolute, "r", encoding="utf-8") as f:
                 if log is True:
-                    print("[Local] " + url)
+                    print(f"[Local] {url}")
                 return f.read()
 
         if log is True:
-            print("[Fetch] " + url)
+            print(f"[Fetch] {url}")
 
         content = self.getPage(url)
         self.writeFile(filepathAbsolute, content)

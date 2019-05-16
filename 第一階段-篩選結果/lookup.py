@@ -37,7 +37,7 @@ args = parser.parse_args()
 
 year = Year.taiwanize(args.year)
 resultFilepath = (
-    args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else args.output + ".xlsx"
+    args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else f"{args.output}.xlsx"
 )
 dbFilepath = ProjectConfig.getCrawledDbFilepath(year)
 
@@ -70,10 +70,10 @@ if os.path.isfile(resultFilepath):
     os.remove(resultFilepath)
 
 # write result to a xlsx file
-writeOutMethod = "writeOutResult{}".format(args.outputFormat)
+writeOutMethod = f"writeOutResult{args.outputFormat}"
 try:
     getattr(lookup, writeOutMethod)(resultFilepath, results, args)
 except:
-    raise Exception("Unknown option: --outputFormat={}".format(args.outputFormat))
+    raise Exception(f"Unknown option: --outputFormat={args.outputFormat}")
 
 print(results)
