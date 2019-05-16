@@ -3,10 +3,12 @@
 
 # tested version:
 # Python: 3.6, 3.7
+# cloudscraper: 1.1.10
 # pandas: 0.23.4
 # pyquery: 1.4.0
 # XlsxWriter: 1.1.6
 
+cloudscraper
 pandas
 pyquery
 XlsxWriter
