@@ -162,3 +162,51 @@ class LookupDb:
             postProcessedResults[admissionId] = departmentIds
 
         self.writeOutSieveResult(outputFile, postProcessedResults, args)
+
+    def writeOutEntranceResult(self, outputFile, lookupResult, args):
+        # output the results (xlsx)
+        with pd.ExcelWriter(outputFile, engine="xlsxwriter") as writer:
+            workbook = writer.book
+
+            # fmt: off
+            cellFormat = workbook.add_format({
+                'align': 'left',
+                'valign': 'vcenter',
+                'text_wrap': True,
+                'font_size': 9,
+            })
+            # fmt: on
+
+            worksheet = workbook.add_worksheet("第二階段-分發結果（甄選委員會）")
+            worksheet.freeze_panes(1, 1)
+
+            # fmt: off
+            worksheet.write_row(
+                0, 0,
+                [ '准考證號', '分發結果' ],
+                cellFormat
+            )
+            # fmt: on
+
+            rowCnt = 1
+            for admissionId, departmentIds in lookupResult.items():
+                applieds = [
+                    # '國立臺灣大學 化學工程學系',
+                    # ...
+                ]
+
+                for departmentId in departmentIds:
+                    universityId = departmentId[:3]
+                    applieds.append(
+                        f"{self.universityMap[universityId]}\n{self.departmentMap[departmentId]}"
+                    )
+
+                # fmt: off
+                worksheet.write_row(
+                    rowCnt, 0,
+                    [int(admissionId), *applieds],
+                    cellFormat
+                )
+                # fmt: on
+
+                rowCnt += 1
