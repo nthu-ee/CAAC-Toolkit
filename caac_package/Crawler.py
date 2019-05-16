@@ -1,4 +1,5 @@
 from .ProjectConfig import ProjectConfig
+from .TaskQueue import TaskQueue
 from pyquery import PyQuery as pq
 import codecs
 import lxml
@@ -70,7 +71,7 @@ class Crawler:
     def fetchAndSaveDepartmentLists(self, filepaths):
         departmentApplys = []
 
-        for filepath in filepaths:
+        def workerFetchPage(filepath):
             content = self.fetchAndSavePage(
                 self.projectBaseUrl + filepath, overwrite=False, log=True
             )
@@ -83,11 +84,25 @@ class Crawler:
                             departmentApplys.append(self.simplifyUrl(prefix + href))
                             break
 
+        taskQueue = TaskQueue(num_workers=ProjectConfig.CRAWLER_WORKER_NUM)
+
+        for filepath in filepaths:
+            taskQueue.add_task(workerFetchPage, filepath=filepath)
+
+        taskQueue.join()
+
         return departmentApplys
 
     def fetchAndSaveDepartmentApplys(self, filepaths):
-        for filepath in filepaths:
+        def workerFetchPage(filepath):
             self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
+
+        taskQueue = TaskQueue(num_workers=ProjectConfig.CRAWLER_WORKER_NUM)
+
+        for filepath in filepaths:
+            taskQueue.add_task(workerFetchPage, filepath=filepath)
+
+        taskQueue.join()
 
         print("[crawler_caac] Finish crawling.")
 

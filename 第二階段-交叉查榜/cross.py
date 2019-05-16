@@ -8,6 +8,7 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from caac_package.ProjectConfig import ProjectConfig
+from caac_package.TaskQueue import TaskQueue
 from caac_package.Year import Year
 import caac_package.functions as caac_funcs
 
@@ -98,22 +99,31 @@ with open("department_ids.txt", "r") as f:
     # unique
     departmentIdsUnique = list(set(departmentIds))
 
-# fetch html content
-apiRetryInterval = 5
-apiUrlFormat = "https://www.com.tw/cross/check_{departmentId}_NO_0_{year}_0_3.html"
-for departmentId in departmentIdsUnique:
-    apiUrl = apiUrlFormat.format(departmentId=departmentId, year=year)
+
+def workerFetchPage(departmentId, year):
+    retryInterval = 5
+    url = f"https://www.com.tw/cross/check_{departmentId}_NO_0_{year}_0_3.html"
 
     while True:
-        content = caac_funcs.getPage(apiUrl)
-        print(f"[Fetching departmentId ID] {departmentId}")
+        print(f"[Fetch department] {departmentId} : Begin")
+        content = caac_funcs.getPage(url)
 
         if content is None:
-            print(f"網站負載過大，{apiRetryInterval}秒後自動重試。")
-            time.sleep(apiRetryInterval)
+            print(f"[Fetch department] {departmentId} : Retry after {retryInterval} seconds...")
+            time.sleep(retryInterval)
         else:
+            print(f"[Fetch department] {departmentId} : Success")
             crossResults.update(caac_funcs.parseWwwComTw(content))
             break
+
+
+taskQueue = TaskQueue(num_workers=ProjectConfig.CRAWLER_WORKER_NUM)
+
+# fetch html content
+for departmentId in departmentIdsUnique:
+    taskQueue.add_task(workerFetchPage, departmentId=departmentId, year=year)
+
+taskQueue.join()
 
 sheetFmts = {
     "base": {"align": "left", "valign": "vcenter", "text_wrap": 1, "font_size": 9},

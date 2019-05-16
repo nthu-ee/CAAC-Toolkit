@@ -21,6 +21,7 @@ class ProjectConfig:
     # followings are adjust-able
     ROOT_DIR = os.path.join(__script_dir__, "..")
     DATA_DIR = os.path.join(ROOT_DIR, "data")
+    CRAWLER_WORKER_NUM = 4
     CRAWLER_RESULT_DIR = os.path.join(DATA_DIR, "crawler_{}")
     CRAWLED_DB_FILENAME = "sqlite3.db"
 
