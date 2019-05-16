@@ -19,7 +19,7 @@ class ProjectConfig:
         __script_dir__ = os.path.dirname(os.path.abspath(__file__))
 
     # followings are adjust-able
-    ROOT_DIR = os.path.join(__script_dir__, "..")
+    ROOT_DIR = os.path.abspath(os.path.join(__script_dir__, ".."))
     DATA_DIR = os.path.join(ROOT_DIR, "data")
     CRAWLER_WORKER_NUM = 4
     CRAWLER_RESULT_DIR = os.path.join(DATA_DIR, "crawler_{}")

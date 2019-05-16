@@ -41,7 +41,7 @@ class Crawler:
         # -------------- #
         self.collegeListUrl = self.projectBaseUrl + "collegeList.htm"
 
-    def run(self):
+    def run(self, showMessage=False):
         # prepare the result directory
         os.makedirs(self.resultDir, exist_ok=True)
 
@@ -49,6 +49,9 @@ class Crawler:
         filepaths = self.fetchAndSaveDepartmentLists(filepaths)
         self.fetchAndSaveDepartmentApplys(filepaths)
         self.generateDb()
+
+        if showMessage:
+            print(f"[Crawler] Files are stored in: {self.resultDir}")
 
     def fetchAndSaveCollegeList(self):
         departmentLists = []
