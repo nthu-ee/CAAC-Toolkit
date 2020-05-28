@@ -157,11 +157,18 @@ class Crawler:
                 universityMap[found.group(1)] = found.group(2).strip()
 
         # build departmentMap and departmentToAdmittees
-        basePath = os.path.join(self.resultDir, "common", "apply")
-        for subdir, dirs, files in os.walk(basePath):
+        for subdir, dirs, files in os.walk(self.resultDir):
+            print(f"Extract data from {subdir}")
+
             for file in files:
-                departmentId = os.path.splitext(file)[0]
-                with open(os.path.join(basePath, file), "r", encoding="utf-8") as f:
+                # if not re.match(r'^[0-9]{6}\.(?:html?)$', file):
+                #     continue
+
+                if os.path.splitext(file)[1] not in [".htm", ".html"]:
+                    continue
+
+                departmentId = os.path.splitext(file)[0].rstrip("LN")
+                with open(os.path.join(subdir, file), "r", encoding="utf-8") as f:
                     content = f.read()
                     # let's find something like "(013032)電子工程學系(甲組)"
                     founds = re.finditer(r"\(([0-9]{6})\)\s*([\w\s\[\]［］()（）]+)", content)
@@ -173,7 +180,6 @@ class Crawler:
                         if departmentId not in departmentToAdmittees:
                             departmentToAdmittees[departmentId] = []
                         departmentToAdmittees[departmentId].append(found.group(1))
-            break
 
         print("[crawler_caac] DB Gen: filling data into the DB file.")
 
