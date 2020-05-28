@@ -1,9 +1,36 @@
+from io import BytesIO
+from PIL import Image
 from pyquery import PyQuery as pq
-import cloudscraper
+import base64
 import os
+import pytesseract
 import re
 import sqlite3
-import time
+
+
+def data_uri_to_image(data_uri: str) -> Image:
+    base64_data = re.sub(r"^data:image/[^;]+;base64,", "", data_uri)
+    byte_data = base64.b64decode(base64_data)
+    image_data = BytesIO(byte_data)
+
+    return Image.open(image_data)
+
+
+def ocr_data_uri(data_uri: str) -> str:
+    # ensure that tesseract.exe is in PATH
+    paths = [
+        r"C:\Program Files\Tesseract-OCR",
+        r"C:\Program Files (x86)\Tesseract-OCR",
+    ]
+    for path in paths:
+        if path not in os.environ["PATH"]:
+            os.environ["PATH"] += os.pathsep + path
+
+    img = data_uri_to_image(data_uri)
+    result = pytesseract.image_to_string(img)
+    img.close()
+
+    return result
 
 
 def loadDb(dbFilepath):
@@ -52,21 +79,28 @@ def parseWwwComTw(content=""):
     admissionIdRegex = r"\b(\d{8})\b"
     departmentIdRegex = r"_(\d{6,7})_"
 
-    content = content.replace("\r", "").replace("\n", " ")  # sanitization
-    personRows = pq(content)("#mainContent table:first > tr")  # get the result html table
+    # sanitization
+    content = content.replace("\r", "").replace("\n", " ")
+    # get the result html table
+    personRows = pq(content)("#mainContent table:first > tbody > tr")
 
     for personRow in personRows.items():
-        findAdmissionId = re.search(admissionIdRegex, personRow.text())
+        html = personRow.html()
 
-        if findAdmissionId is None:
+        matches = re.search(r'data:image/[^;]+;base64,[^\'"]*', html)
+        if not matches:
             continue
 
-        admissionId = findAdmissionId.group(1)
-        personName = personRow("td:nth-child(4)").text().strip()
+        admissionId = ocr_data_uri(matches.group(0))
 
+        if not re.match(admissionIdRegex, admissionId):
+            print(f"Wrong admission ID: {admissionId}")
+            continue
+
+        personName = personRow("td:nth-child(4)").text().strip()
         personResult = {admissionId: {"_name": personName}}
 
-        applyTableRows = personRow("td:nth-child(5) table:first > tr")
+        applyTableRows = personRow("td:nth-child(5) table:first > tbody > tr")
 
         for applyTableRow in applyTableRows.items():
             findDepartmentId = re.search(departmentIdRegex, applyTableRow.html())
@@ -83,6 +117,8 @@ def parseWwwComTw(content=""):
                 "isDispatched": "分發錄取" in applyTableRow.html(),
                 "applyState": normalizeApplyStateC2E(applyState),
             }
+
+        print(f"Parsed data: {personResult}\n")
 
         peopleResult.update(personResult)
 

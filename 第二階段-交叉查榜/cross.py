@@ -1,4 +1,6 @@
+from pyppeteer import launch
 import argparse
+import asyncio
 import datetime
 import os
 import pandas as pd
@@ -9,7 +11,6 @@ import time
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from caac_package.Crawler import Crawler
 from caac_package.ProjectConfig import ProjectConfig
-from caac_package.TaskQueue import TaskQueue
 from caac_package.Year import Year
 import caac_package.functions as caac_funcs
 
@@ -36,11 +37,11 @@ resultFilepath = (
 crossResults = {
     # '准考證號': {
     #     '_name': '考生姓名',
-    #         '系所編號1': {
-    #             '_name': '國立臺灣大學醫學系(繁星第八類)',
-    #             'isDispatched': False,
-    #             'applyState': 'primary',
-    #         }
+    #     '系所編號1': {
+    #         '_name': '國立臺灣大學醫學系(繁星第八類)',
+    #         'isDispatched': False,
+    #         'applyState': 'primary',
+    #     }
     #     ...
     # },
     # ...
@@ -102,30 +103,44 @@ with open("department_ids.txt", "r") as f:
 departmentIdsUnique = list(set(departmentIds))
 
 
-def workerFetchPage(departmentId, year):
-    retryInterval = 5
-    url = f"https://www.com.tw/cross/check_{departmentId}_NO_0_{year}_0_3.html"
+async def puppetFetchCrossUrls(urls):
+    global crossResults
 
-    while True:
-        print(f"[Fetch department] {departmentId} : Begin")
-        content = Crawler.getPage(url)
+    ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36"
 
-        if content is None:
-            print(f"[Fetch department] {departmentId} : Retry after {retryInterval} seconds...")
-            time.sleep(retryInterval)
-        else:
-            print(f"[Fetch department] {departmentId} : Success")
-            crossResults.update(caac_funcs.parseWwwComTw(content))
-            break
+    browser = await launch(
+        # fmt: off
+        headless=False,
+        userDataDir=".browserData",
+        # fmt: on
+    )
+
+    for url in urls:
+        print(f"Visit {url}")
+
+        page = await browser.newPage()
+
+        await page.setUserAgent(ua)
+        await page.goto(url)
+        await page.waitForSelector("#footer")
+
+        html = await page.content()
+        crossResults.update(caac_funcs.parseWwwComTw(html))
+
+        await page.close()
+
+    await browser.close()
+    print("Done crawling...\n")
 
 
-taskQueue = TaskQueue(num_workers=ProjectConfig.CRAWLER_WORKER_NUM)
-
-# fetch html content
-for departmentId in departmentIdsUnique:
-    taskQueue.add_task(workerFetchPage, departmentId=departmentId, year=year)
-
-taskQueue.join()
+asyncio.get_event_loop().run_until_complete(
+    puppetFetchCrossUrls(
+        urls=[
+            f"https://www.com.tw/cross/check_{departmentId}_NO_0_{year}_0_3.html"
+            for departmentId in departmentIdsUnique
+        ]
+    )
+)
 
 sheetFmts = {
     "base": {"align": "left", "valign": "vcenter", "text_wrap": 1, "font_size": 9},
