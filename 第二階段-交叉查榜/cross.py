@@ -48,7 +48,7 @@ crossResults = {
 }
 
 
-def splitUniversityNameAndDepartmentName(fullName):
+def splitUniversityNameAndDepartmentName(fullName: str):
     """
     @brief 將 "國立臺灣大學機械工程學系" 轉換為 ['國立臺灣大學', '機械工程學系']
 

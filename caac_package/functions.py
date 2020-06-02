@@ -33,7 +33,7 @@ def ocr_data_uri(data_uri: str) -> str:
     return result
 
 
-def loadDb(dbFilepath):
+def loadDb(dbFilepath: str) -> tuple:
     if not os.path.isfile(dbFilepath):
         raise Exception(f"DB file does not exist: {dbFilepath}")
 
@@ -62,7 +62,7 @@ def loadDb(dbFilepath):
     return universityMap, departmentMap
 
 
-def parseWwwComTw(content=""):
+def parseWwwComTw(content: str = "") -> dict:
     peopleResult = {
         # '准考證號': {
         #     '_name': '考生姓名',
@@ -125,7 +125,7 @@ def parseWwwComTw(content=""):
     return peopleResult
 
 
-def normalizeApplyStateC2E(chinese):
+def normalizeApplyStateC2E(chinese: str) -> str:
     # 正取
     if "正" in chinese:
         order = re.search(r"(\d+)", chinese)
@@ -143,7 +143,7 @@ def normalizeApplyStateC2E(chinese):
     return "unknown"
 
 
-def normalizeApplyStateE2C(english):
+def normalizeApplyStateE2C(english: str) -> str:
     # 正取
     if "primary" in english:
         state = english.split("-")
@@ -166,14 +166,14 @@ def normalizeApplyStateE2C(english):
     return "不明"
 
 
-def batch(iterable, batchSize=1):
+def batch(iterable, batchSize: int = 1):
     length = len(iterable)
     for idx in range(0, length, batchSize):
         # python will do the boundary check automatically
         yield iterable[idx : idx + batchSize]
 
 
-def canBeInt(s):
+def canBeInt(s) -> bool:
     try:
         int(s)
         return True
@@ -181,7 +181,7 @@ def canBeInt(s):
         return False
 
 
-def listUnique(theList, clear=False):
+def listUnique(theList: list, clear: bool = False) -> list:
     theList = list(set(theList))
 
-    return filter(len, theList) if clear else theList
+    return list(filter(len, theList)) if clear else theList
