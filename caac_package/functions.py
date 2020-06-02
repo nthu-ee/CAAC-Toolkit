@@ -19,8 +19,9 @@ def data_uri_to_image(data_uri: str) -> Image:
 def ocr_data_uri(data_uri: str) -> str:
     # ensure that tesseract.exe is in PATH
     paths = [
-        r"C:\Program Files\Tesseract-OCR",
-        r"C:\Program Files (x86)\Tesseract-OCR",
+        # r"C:\Program Files\Tesseract-OCR",
+        # r"C:\Program Files (x86)\Tesseract-OCR",
+        get_tesseract_dir(),
     ]
     for path in paths:
         if path not in os.environ["PATH"]:
@@ -31,6 +32,26 @@ def ocr_data_uri(data_uri: str) -> str:
     img.close()
 
     return result
+
+
+def get_tesseract_dir() -> str:
+    from caac_package.ProjectConfig import ProjectConfig
+
+    return os.path.join(ProjectConfig.ROOT_DIR, "bin", "tesseract-ocr")
+
+
+def get_chromium_dir() -> str:
+    from caac_package.ProjectConfig import ProjectConfig
+
+    return os.path.join(ProjectConfig.ROOT_DIR, "bin", "chromium")
+
+
+def get_chromium_binary_path() -> str:
+    return os.path.join(get_chromium_dir(), "bin", "chrome.exe")
+
+
+def get_chromium_profile_dir() -> str:
+    return os.path.join(get_chromium_dir(), "profile")
 
 
 def loadDb(dbFilepath: str) -> tuple:

@@ -106,13 +106,10 @@ departmentIdsUnique = list(set(departmentIds))
 async def puppetFetchCrossUrls(urls):
     global crossResults
 
-    ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36"
-
     browser = await launch(
-        # fmt: off
+        executablePath=caac_funcs.get_chromium_binary_path(),
         headless=False,
-        userDataDir=".browserData",
-        # fmt: on
+        userDataDir=caac_funcs.get_chromium_profile_dir(),
     )
 
     for url in urls:
@@ -120,7 +117,6 @@ async def puppetFetchCrossUrls(urls):
 
         page = await browser.newPage()
 
-        await page.setUserAgent(ua)
         await page.goto(url)
         await page.waitForSelector("#footer")
 

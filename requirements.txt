@@ -10,8 +10,7 @@
 
 cloudscraper
 pandas
-# pyppeteer
-git+https://github.com/pyppeteer/pyppeteer@dev
+pyppeteer
 pyquery
 pytesseract
 XlsxWriter
