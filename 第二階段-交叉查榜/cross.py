@@ -29,9 +29,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 year = Year.taiwanize(args.year)
-resultFilepath = (
-    args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else args.output + ".xlsx"
-)
+resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else args.output + ".xlsx"
 
 # variables
 crossResults = {
@@ -72,9 +70,7 @@ def nthuSort(department):
     if departmentId.startswith("_"):
         return departmentId
 
-    universityName, departmentName = splitUniversityNameAndDepartmentName(
-        personResult[departmentId]["_name"]
-    )
+    universityName, departmentName = splitUniversityNameAndDepartmentName(personResult[departmentId]["_name"])
 
     # 清華大學 be the later one
     if "清華大學" in universityName:
@@ -211,9 +207,7 @@ for crossResult in crossResultsSorted:
     ]
 
     if departmentNameDispatched:
-        universityName, departmentName = splitUniversityNameAndDepartmentName(
-            departmentNameDispatched[0]
-        )
+        universityName, departmentName = splitUniversityNameAndDepartmentName(departmentNameDispatched[0])
         departmentNameDispatched = f"{universityName}\n{departmentName}"
     else:
         departmentNameDispatched = ""
@@ -234,9 +228,7 @@ for crossResult in crossResultsSorted:
         if departmentId.startswith("_"):
             continue
 
-        universityName, departmentName = splitUniversityNameAndDepartmentName(
-            personResult[departmentId]["_name"]
-        )
+        universityName, departmentName = splitUniversityNameAndDepartmentName(personResult[departmentId]["_name"])
 
         departmentResult = personResult[departmentId]
 

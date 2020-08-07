@@ -18,14 +18,10 @@ parser.add_argument(
     help="The year of data to be processed. (ex: 2017 or 106 is the same)",
 )
 parser.add_argument(
-    "--admissionIds",
-    default="",
-    help="Admission IDs that are going to be looked up. (separate by commas)",
+    "--admissionIds", default="", help="Admission IDs that are going to be looked up. (separate by commas)",
 )
 parser.add_argument(
-    "--departmentIds",
-    default="",
-    help="Department IDs that are going to be looked up. (separate by commas)",
+    "--departmentIds", default="", help="Department IDs that are going to be looked up. (separate by commas)",
 )
 parser.add_argument(
     "--output",
@@ -36,9 +32,7 @@ parser.add_argument("--outputFormat", default="", help='Leave it blank or "NthuE
 args = parser.parse_args()
 
 year = Year.taiwanize(args.year)
-resultFilepath = (
-    args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else f"{args.output}.xlsx"
-)
+resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else f"{args.output}.xlsx"
 dbFilepath = ProjectConfig.getCrawledDbFile(year, "apply_sieve")
 
 # variables

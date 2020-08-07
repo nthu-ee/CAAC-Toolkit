@@ -76,9 +76,7 @@ class Crawler:
         departmentApplys = []
 
         def workerFetchPage(filepath):
-            content = self.fetchAndSavePage(
-                self.projectBaseUrl + filepath, overwrite=False, log=True
-            )
+            content = self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
             links = pq(content)("a")
             for link in links.items():
                 href = link.attr("href")
@@ -257,9 +255,7 @@ class Crawler:
         while True:
             # try to get page content
             try:
-                scraper = cloudscraper.create_scraper(
-                    delay=None, interpreter="js2py", allow_brotli=True, debug=False
-                )
+                scraper = cloudscraper.create_scraper(delay=None, interpreter="js2py", allow_brotli=True, debug=False)
 
                 return scraper.get(url).content.decode("utf-8")
             # somehow we cannot get the page content

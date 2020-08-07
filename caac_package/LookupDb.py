@@ -121,9 +121,7 @@ class LookupDb:
 
                 for departmentId in departmentIds:
                     universityId = departmentId[:3]
-                    applieds.append(
-                        f"{self.universityMap[universityId]}\n{self.departmentMap[departmentId]}"
-                    )
+                    applieds.append(f"{self.universityMap[universityId]}\n{self.departmentMap[departmentId]}")
 
                 # fmt: off
                 worksheet.write_row(
@@ -197,9 +195,7 @@ class LookupDb:
 
                 for departmentId in departmentIds:
                     universityId = departmentId[:3]
-                    applieds.append(
-                        f"{self.universityMap[universityId]}\n{self.departmentMap[departmentId]}"
-                    )
+                    applieds.append(f"{self.universityMap[universityId]}\n{self.departmentMap[departmentId]}")
 
                 # fmt: off
                 worksheet.write_row(
