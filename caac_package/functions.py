@@ -113,6 +113,8 @@ def parseWwwComTw(content: str = "") -> dict:
             continue
 
         admissionId = ocr_data_uri(matches.group(0))
+        # simple sanitization...
+        admissionId = re.sub(r"[^0-9a-zA-Z]+", "", admissionId)
 
         if not re.match(admissionIdRegex, admissionId):
             print(f"Wrong admission ID: {admissionId}")
