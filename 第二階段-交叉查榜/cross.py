@@ -46,6 +46,41 @@ crossResults = {
 }
 
 
+def fixPyppeteer() -> None:
+    """ Help us be able to crawl Cloudflare-protected sites. """
+
+    from pyppeteer import launcher
+
+    # args are copied from https://www.npmjs.com/package/puppeteer-extra-plugin-stealth
+    launcher.DEFAULT_ARGS = [
+        "--disable-background-networking",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-blink-features=AutomationControlled",
+        "--disable-breakpad",
+        "--disable-client-side-phishing-detection",
+        "--disable-component-extensions-with-background-pages",
+        "--disable-default-apps",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-features=Translate",
+        "--disable-hang-monitor",
+        "--disable-ipc-flooding-protection",
+        "--disable-popup-blocking",
+        "--disable-prompt-on-repost",
+        "--disable-renderer-backgrounding",
+        "--disable-sync",
+        "--enable-automation",
+        "--enable-blink-features=IdleDetection",
+        "--enable-features=NetworkService,NetworkServiceInProcess",
+        "--force-color-profile=srgb",
+        "--metrics-recording-only",
+        "--no-first-run",
+        "--password-store=basic",
+        "--use-mock-keychain",
+    ]
+
+
 def splitUniversityNameAndDepartmentName(fullName: str):
     """
     @brief 將 "國立臺灣大學機械工程學系" 轉換為 ['國立臺灣大學', '機械工程學系']
@@ -85,6 +120,8 @@ def nthuSort(department):
     else:
         return "A" + departmentId
 
+
+fixPyppeteer()
 
 t_start = time.time()
 
