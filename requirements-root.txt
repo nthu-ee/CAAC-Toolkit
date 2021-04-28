@@ -1,0 +1,7 @@
+# This file is for root dependencies
+
+pandas
+pyppeteer
+pyquery
+pytesseract
+XlsxWriter

@@ -1,16 +1,21 @@
-# This is an implicit value, here for clarity
---index https://pypi.python.org/simple/
-
-# tested version:
-# Python: 3.6, 3.7, 3.8
-# cloudscraper: 1.1.10
-# pandas: 0.23.4
-# pyquery: 1.4.0
-# XlsxWriter: 1.1.6
-
-cloudscraper
-pandas
-pyppeteer
-pyquery
-pytesseract
-XlsxWriter
+appdirs==1.4.4
+certifi==2021.10.8
+colorama==0.4.4
+cssselect==1.1.0
+importlib-metadata==4.10.0
+lxml==4.7.1
+numpy==1.22.0
+pandas==1.3.5
+Pillow==9.0.0
+pyee==8.2.2
+pyppeteer==1.0.2
+pyquery==1.4.3
+pytesseract==0.3.8
+python-dateutil==2.8.2
+pytz==2021.3
+six==1.16.0
+tqdm==4.62.3
+urllib3==1.26.8
+websockets==10.1
+XlsxWriter==3.0.2
+zipp==3.7.0

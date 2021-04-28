@@ -1,6 +1,9 @@
 .DS_Store
 __pycache__
 
+/.venv
+venv
+
 *.7z
 *.zip
 *.rar
