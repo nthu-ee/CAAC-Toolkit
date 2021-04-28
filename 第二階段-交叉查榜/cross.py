@@ -47,7 +47,7 @@ crossResults = {
 
 
 def fixPyppeteer() -> None:
-    """ Help us be able to crawl Cloudflare-protected sites. """
+    """Help us be able to crawl Cloudflare-protected sites."""
 
     from pyppeteer import launcher
 

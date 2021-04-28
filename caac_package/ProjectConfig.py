@@ -27,7 +27,7 @@ class ProjectConfig:
 
     @classmethod
     def getCrawledResultDir(self, year, apply_stage):
-        """ Get the crawled result directory for a sepecific year/stage. """
+        """Get the crawled result directory for a sepecific year/stage."""
 
         year = Year.taiwanize(year)
 
@@ -35,7 +35,7 @@ class ProjectConfig:
 
     @classmethod
     def getCrawledDbFile(self, year, apply_stage):
-        """ Get the crawled db file for a sepecific year/stage. """
+        """Get the crawled db file for a sepecific year/stage."""
 
         year = Year.taiwanize(year)
 

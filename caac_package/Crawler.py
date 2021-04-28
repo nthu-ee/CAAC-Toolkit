@@ -109,7 +109,7 @@ class Crawler:
         print("[crawler_caac] Finish crawling.")
 
     def fetchAndSavePage(self, url, overwrite=True, log=False):
-        """ fetch and save a page depending on its URL """
+        """fetch and save a page depending on its URL"""
 
         filepath = url.replace(self.projectBaseUrl, "")
         filepathAbsolute = os.path.join(self.resultDir, filepath)
@@ -127,7 +127,7 @@ class Crawler:
         return content
 
     def generateDb(self):
-        """ generate a db file from crawled html files """
+        """generate a db file from crawled html files"""
 
         dbFilepath = ProjectConfig.getCrawledDbFile(self.year, self.apply_stage)
 
@@ -250,7 +250,7 @@ class Crawler:
 
     @classmethod
     def getPage(self, url):
-        """ get a certain web page """
+        """get a certain web page"""
 
         while True:
             # try to get page content
@@ -271,7 +271,7 @@ class Crawler:
             time.sleep(1)
 
     def writeFile(self, filename, content="", mode="w", codec="utf-8"):
-        """ write content to an external file """
+        """write content to an external file"""
 
         # create directory if the directory does exist yet
         filedir = os.path.dirname(filename)
