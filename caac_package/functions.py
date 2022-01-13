@@ -8,7 +8,7 @@ import re
 import sqlite3
 
 
-def data_uri_to_image(data_uri: str) -> Image:
+def data_uri_to_image(data_uri: str) -> Image.Image:
     base64_data = re.sub(r"^data:image/[^;]+;base64,", "", data_uri)
     byte_data = base64.b64decode(base64_data)
     image_data = BytesIO(byte_data)
