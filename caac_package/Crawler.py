@@ -1,9 +1,11 @@
 from .ProjectConfig import ProjectConfig
-from .TaskQueue import TaskQueue
+from concurrent.futures import ThreadPoolExecutor
 from pyquery import PyQuery as pq
+from typing import Iterable, List, Optional
 import cloudscraper
 import codecs
 import lxml
+import lxml.etree
 import os
 import re
 import sqlite3
@@ -18,7 +20,7 @@ class Crawler:
     collegeListUrl = ""
     resultDir = ""
 
-    def __init__(self, year, apply_stage, projectBaseUrl=""):
+    def __init__(self, year: int, apply_stage: str, projectBaseUrl: str = "") -> None:
         self.year = year
         self.apply_stage = apply_stage
         self.resultDir = ProjectConfig.getCrawledResultDir(self.year, self.apply_stage)
@@ -41,7 +43,7 @@ class Crawler:
         # -------------- #
         self.collegeListUrl = self.projectBaseUrl + "collegeList.htm"
 
-    def run(self, showMessage=False):
+    def run(self, showMessage: bool = False) -> None:
         # prepare the result directory
         os.makedirs(self.resultDir, exist_ok=True)
 
@@ -53,8 +55,8 @@ class Crawler:
         if showMessage:
             print(f"[Crawler] Files are stored in: {self.resultDir}")
 
-    def fetchAndSaveCollegeList(self):
-        departmentLists = []
+    def fetchAndSaveCollegeList(self) -> List[str]:
+        departmentLists: List[str] = []
 
         # the user may give a wrong URL in the last run
         # in that case, we overwrite the old file and run again
@@ -66,49 +68,43 @@ class Crawler:
             links = pq(content)("a")
 
         for link in links.items():
-            href = link.attr("href")
+            href = str(link.attr("href"))
             if "common/" in href or "extra/" in href:
                 departmentLists.append(href)
 
         return departmentLists
 
-    def fetchAndSaveDepartmentLists(self, filepaths):
-        departmentApplys = []
+    def fetchAndSaveDepartmentLists(self, filepaths: Iterable[str]) -> List[str]:
+        departmentApplys: List[str] = []
 
-        def workerFetchPage(filepath):
+        def workerFetchPage(filepath: str) -> None:
             content = self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
             links = pq(content)("a")
             for link in links.items():
-                href = link.attr("href")
+                href = str(link.attr("href"))
                 if "apply/" in href:
                     for prefix in ["common/", "extra/"]:
                         if prefix in filepath:
                             departmentApplys.append(self.simplifyUrl(prefix + href))
                             break
 
-        taskQueue = TaskQueue(num_workers=ProjectConfig.CRAWLER_WORKER_NUM)
-
-        for filepath in filepaths:
-            taskQueue.add_task(workerFetchPage, filepath=filepath)
-
-        taskQueue.join()
+        with ThreadPoolExecutor(max_workers=ProjectConfig.CRAWLER_WORKER_NUM) as executor:
+            for filepath in filepaths:
+                executor.submit(workerFetchPage, filepath=filepath)
 
         return departmentApplys
 
-    def fetchAndSaveDepartmentApplys(self, filepaths):
-        def workerFetchPage(filepath):
+    def fetchAndSaveDepartmentApplys(self, filepaths: Iterable[str]) -> None:
+        def workerFetchPage(filepath: str) -> None:
             self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
 
-        taskQueue = TaskQueue(num_workers=ProjectConfig.CRAWLER_WORKER_NUM)
-
-        for filepath in filepaths:
-            taskQueue.add_task(workerFetchPage, filepath=filepath)
-
-        taskQueue.join()
+        with ThreadPoolExecutor(max_workers=ProjectConfig.CRAWLER_WORKER_NUM) as executor:
+            for filepath in filepaths:
+                executor.submit(workerFetchPage, filepath=filepath)
 
         print("[crawler_caac] Finish crawling.")
 
-    def fetchAndSavePage(self, url, overwrite=True, log=False):
+    def fetchAndSavePage(self, url: str, overwrite: bool = True, log: bool = False) -> str:
         """fetch and save a page depending on its URL"""
 
         filepath = url.replace(self.projectBaseUrl, "")
@@ -122,11 +118,11 @@ class Crawler:
         if log is True:
             print(f"[Fetch] {url}")
 
-        content = self.getPage(url)
+        content = self.getPage(url) or ""
         self.writeFile(filepathAbsolute, content)
         return content
 
-    def generateDb(self):
+    def generateDb(self) -> None:
         """generate a db file from crawled html files"""
 
         dbFilepath = ProjectConfig.getCrawledDbFile(self.year, self.apply_stage)
@@ -249,7 +245,7 @@ class Crawler:
         print("[crawler_caac] DB Gen: done.")
 
     @classmethod
-    def getPage(self, url):
+    def getPage(cls, url: str, retry_s: float = 3.0) -> Optional[str]:
         """get a certain web page"""
 
         while True:
@@ -268,9 +264,9 @@ class Crawler:
                     return None
 
             # fail to fetch the page, let's sleep for a while
-            time.sleep(1)
+            time.sleep(retry_s)
 
-    def writeFile(self, filename, content="", mode="w", codec="utf-8"):
+    def writeFile(self, filename: str, content: str = "", mode: str = "w", codec: str = "utf-8") -> None:
         """write content to an external file"""
 
         # create directory if the directory does exist yet
@@ -281,7 +277,7 @@ class Crawler:
         with codecs.open(filename, mode, codec) as f:
             f.write(content)
 
-    def simplifyUrl(self, url):
+    def simplifyUrl(self, url: str) -> str:
         url = re.sub(r"(^|/)./", r"\1", url)
         url = re.sub(r"(?<!:)/{2,}", r"/", url)
 

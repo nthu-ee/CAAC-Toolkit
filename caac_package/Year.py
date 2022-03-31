@@ -12,13 +12,13 @@ class Year:
     YEAR_CURRENT_TAIWAN = YEAR_CURRENT - YEAR_BEGIN
 
     @classmethod
-    def taiwanize(self, year):
+    def taiwanize(cls, year: int) -> int:
         """Make the year into its Taiwan year representation."""
 
-        return year - self.YEAR_BEGIN if year >= self.YEAR_BEGIN else year
+        return year - cls.YEAR_BEGIN if year >= cls.YEAR_BEGIN else year
 
     @classmethod
-    def centuryze(self, year):
+    def centuryze(cls, year: int) -> int:
         """Make the year into its A.C. year representation."""
 
-        return year + self.YEAR_BEGIN if year < self.YEAR_BEGIN else year
+        return year + cls.YEAR_BEGIN if year < cls.YEAR_BEGIN else year

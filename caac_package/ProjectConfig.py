@@ -26,17 +26,17 @@ class ProjectConfig:
     CRAWLED_DB_FILENAME = "sqlite3.db"
 
     @classmethod
-    def getCrawledResultDir(self, year, apply_stage):
+    def getCrawledResultDir(cls, year: int, apply_stage: str) -> str:
         """Get the crawled result directory for a sepecific year/stage."""
 
         year = Year.taiwanize(year)
 
-        return os.path.join(self.CRAWLER_RESULT_DIR.format(year), f"stage_{apply_stage}")
+        return os.path.join(cls.CRAWLER_RESULT_DIR.format(year), f"stage_{apply_stage}")
 
     @classmethod
-    def getCrawledDbFile(self, year, apply_stage):
+    def getCrawledDbFile(cls, year: int, apply_stage: str) -> str:
         """Get the crawled db file for a sepecific year/stage."""
 
         year = Year.taiwanize(year)
 
-        return os.path.join(self.getCrawledResultDir(year, apply_stage), self.CRAWLED_DB_FILENAME)
+        return os.path.join(cls.getCrawledResultDir(year, apply_stage), cls.CRAWLED_DB_FILENAME)

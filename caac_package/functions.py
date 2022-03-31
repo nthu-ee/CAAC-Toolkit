@@ -1,11 +1,14 @@
 from io import BytesIO
 from PIL import Image
 from pyquery import PyQuery as pq
+from typing import Any, Dict, List, Tuple, TypeVar
 import base64
 import os
 import pytesseract
 import re
 import sqlite3
+
+T = TypeVar("T")
 
 
 def data_uri_to_image(data_uri: str) -> Image.Image:
@@ -54,7 +57,7 @@ def get_chromium_profile_dir() -> str:
     return os.path.join(get_chromium_dir(), "profile")
 
 
-def loadDb(dbFilepath: str) -> tuple:
+def loadDb(dbFilepath: str) -> Tuple[Dict[str, str], Dict[str, str]]:
     if not os.path.isfile(dbFilepath):
         raise Exception(f"DB file does not exist: {dbFilepath}")
 
@@ -68,7 +71,7 @@ def loadDb(dbFilepath: str) -> tuple:
                 FROM universities
             """
         )
-        universityMap = {university[0]: university[1] for university in cursor.fetchall()}
+        universityMap: Dict[str, str] = {university[0]: university[1] for university in cursor.fetchall()}
 
         # build departmentMap
         cursor = conn.execute(
@@ -78,12 +81,12 @@ def loadDb(dbFilepath: str) -> tuple:
             """
         )
 
-        departmentMap = {department[0]: department[1] for department in cursor.fetchall()}
+        departmentMap: Dict[str, str] = {department[0]: department[1] for department in cursor.fetchall()}
 
     return universityMap, departmentMap
 
 
-def parseWwwComTw(content: str = "") -> dict:
+def parseWwwComTw(content: str = "") -> Dict[str, Any]:
     peopleResult = {
         # '准考證號': {
         #     '_name': '考生姓名',
@@ -189,14 +192,7 @@ def normalizeApplyStateE2C(english: str) -> str:
     return "不明"
 
 
-def batch(iterable, batchSize: int = 1):
-    length = len(iterable)
-    for idx in range(0, length, batchSize):
-        # python will do the boundary check automatically
-        yield iterable[idx : idx + batchSize]
-
-
-def canBeInt(s) -> bool:
+def canBeInt(s: Any) -> bool:
     try:
         int(s)
         return True
@@ -204,7 +200,7 @@ def canBeInt(s) -> bool:
         return False
 
 
-def listUnique(theList: list, clear: bool = False) -> list:
+def listUnique(theList: List[T], clear: bool = False) -> List[T]:
     theList = list(set(theList))
 
-    return list(filter(len, theList)) if clear else theList
+    return list(filter(None, theList)) if clear else theList
