@@ -106,10 +106,10 @@ def parseWwwComTw(content: str = "") -> Dict[str, Any]:
     # sanitization
     content = content.replace("\r", "").replace("\n", " ")
     # get the result html table
-    personRows = pq(content)("#mainContent table:first > tbody > tr")
+    personRows = pq(content)("#mainContent > table:first > tbody > tr")
 
     for personRow in personRows.items():
-        html = personRow.html()
+        html = personRow.outer_html()
 
         matches = re.search(r'data:image/[^;]+;base64,[^\'"]*', html)
         if not matches:
@@ -129,7 +129,7 @@ def parseWwwComTw(content: str = "") -> Dict[str, Any]:
         applyTableRows = personRow("td:nth-child(5) table:first > tbody > tr")
 
         for applyTableRow in applyTableRows.items():
-            findDepartmentId = re.search(departmentIdRegex, applyTableRow.html())
+            findDepartmentId = re.search(departmentIdRegex, applyTableRow.outer_html())
 
             if findDepartmentId is None:
                 continue
@@ -140,7 +140,7 @@ def parseWwwComTw(content: str = "") -> Dict[str, Any]:
 
             personResult[admissionId][departmentId] = {
                 "_name": departmentName,
-                "isDispatched": "分發錄取" in applyTableRow.html(),
+                "isDispatched": "分發錄取" in applyTableRow.outer_html(),
                 "applyState": normalizeApplyStateC2E(applyState),
             }
 

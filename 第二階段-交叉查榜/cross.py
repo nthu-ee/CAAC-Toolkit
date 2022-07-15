@@ -93,6 +93,7 @@ def splitUniversityNameAndDepartmentName(fullName: str):
     findUniverityName = re.search(r"((?:[^\s]+)(?:大學|學院))(.*)", fullName)
 
     if findUniverityName is None:
+        print(f"[ERROR] Failed to split university name: {fullName}")
         return None
 
     return [findUniverityName.group(1).strip(), findUniverityName.group(2).strip()]
