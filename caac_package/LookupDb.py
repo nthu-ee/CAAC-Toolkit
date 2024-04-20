@@ -4,9 +4,10 @@ import argparse
 import os
 import sqlite3
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
+from xlsxwriter import Workbook
 
 
 class LookupDb:
@@ -98,7 +99,7 @@ class LookupDb:
     ) -> None:
         # output the results (xlsx)
         with pd.ExcelWriter(outputFile, engine="xlsxwriter") as writer:
-            workbook = writer.book
+            workbook = cast(Workbook, writer.book)
 
             cellFormat = workbook.add_format({
                 "align": "left",
@@ -168,7 +169,7 @@ class LookupDb:
     ) -> None:
         # output the results (xlsx)
         with pd.ExcelWriter(outputFile, engine="xlsxwriter") as writer:
-            workbook = writer.book
+            workbook = cast(Workbook, writer.book)
 
             cellFormat = workbook.add_format({
                 "align": "left",

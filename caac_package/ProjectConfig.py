@@ -15,7 +15,7 @@ class ProjectConfig:
             __script_dir__ = os.path.dirname(os.path.abspath(sys.executable))
         # we are running in a one-folder bundle
         else:
-            __script_dir__ = sys._MEIPASS
+            __script_dir__ = getattr(sys, "_MEIPASS")
     # we are running in a normal Python environment
     else:
         __script_dir__ = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +23,7 @@ class ProjectConfig:
     # followings are adjust-able
     ROOT_DIR = os.path.abspath(os.path.join(__script_dir__, ".."))
     DATA_DIR = os.path.join(ROOT_DIR, "data")
-    CRAWLER_WORKER_NUM = 4
+    CRAWLER_WORKER_NUM = 8
     CRAWLER_RESULT_DIR = os.path.join(DATA_DIR, "crawler_{}")
     CRAWLED_DB_FILENAME = "sqlite3.db"
 

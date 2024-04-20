@@ -32,6 +32,10 @@ class Crawler:
         # projectBaseUrl #
         # -------------- #
         self.projectBaseUrl = projectBaseUrl.strip()
+        """
+        Eventually, we have something like the following
+        `https://www.cac.edu.tw/CacLink/apply113/113applY_xSievePk4g_T43D54VO_91S/html_sieve_113_Ks7Zx/ColPost/`
+        """
 
         if re.search(r"\.[a-zA-Z0-9_]+$", self.projectBaseUrl):
             self.projectBaseUrl = os.path.dirname(self.projectBaseUrl)
@@ -72,7 +76,7 @@ class Crawler:
 
         for link in links.items():
             href = str(link.attr("href"))
-            if "common/" in href or "extra/" in href:
+            if href.startswith("web/"):
                 departmentLists.append(href)
 
         return departmentLists
@@ -81,15 +85,13 @@ class Crawler:
         departmentApplys: list[str] = []
 
         def workerFetchPage(filepath: str) -> None:
-            content = self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
+            content = self.fetchAndSavePage(f"{self.projectBaseUrl}{filepath}", overwrite=False, log=True)
             links = pq(content)("a")
             for link in links.items():
                 href = str(link.attr("href"))
-                if "apply/" in href:
-                    for prefix in ["common/", "extra/"]:
-                        if prefix in filepath:
-                            departmentApplys.append(self.simplifyUrl(prefix + href))
-                            break
+                print(f"{filepath = }; {href = }")
+                if href.startswith(("common/", "extra/")):
+                    departmentApplys.append(self.simplifyUrl(f"web/{href}"))
 
         with ThreadPoolExecutor(max_workers=ProjectConfig.CRAWLER_WORKER_NUM) as executor:
             for filepath in filepaths:
@@ -99,7 +101,7 @@ class Crawler:
 
     def fetchAndSaveDepartmentApplys(self, filepaths: Iterable[str]) -> None:
         def workerFetchPage(filepath: str) -> None:
-            self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
+            self.fetchAndSavePage(f"{self.projectBaseUrl}{filepath}", overwrite=False, log=True)
 
         with ThreadPoolExecutor(max_workers=ProjectConfig.CRAWLER_WORKER_NUM) as executor:
             for filepath in filepaths:
