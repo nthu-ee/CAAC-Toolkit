@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import os
 import sys
+
 from .Year import Year
 
 
 class ProjectConfig:
-
     # @see https://pythonhosted.org/PyInstaller/runtime-information.html
     # we are running in a bundle
     if getattr(sys, "frozen", False):

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import collections
 import datetime
@@ -5,10 +7,10 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+import caac_package.functions as caac_funcs
 from caac_package.LookupDb import LookupDb
 from caac_package.ProjectConfig import ProjectConfig
 from caac_package.Year import Year
-import caac_package.functions as caac_funcs
 
 parser = argparse.ArgumentParser(description="A database lookup utility for CAAC website.")
 parser.add_argument(
@@ -51,7 +53,7 @@ lookup.loadDb()
 # do lookup
 if args.admissionIds:
     if args.admissionIds == "@file":
-        with open("admission_ids.txt", "r") as f:
+        with open("admission_ids.txt") as f:
             admissionIds = f.read().split()
             # trim spaces
             admissionIds = [departmentId.strip() for departmentId in admissionIds]
@@ -69,7 +71,7 @@ if args.admissionIds:
 # do lookup
 if args.departmentIds:
     if args.departmentIds == "@file":
-        with open("department_ids.txt", "r") as f:
+        with open("department_ids.txt") as f:
             departmentIds = f.read().split()
             # trim spaces
             departmentIds = [departmentId.strip() for departmentId in departmentIds]

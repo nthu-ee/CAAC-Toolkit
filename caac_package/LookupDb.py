@@ -1,14 +1,17 @@
-from typing import Any, Dict, Iterable, Optional
+from __future__ import annotations
+
 import argparse
 import os
-import pandas as pd
 import sqlite3
+from collections.abc import Iterable
+from typing import Any
+
+import pandas as pd
 
 
 class LookupDb:
-
     # db handle
-    conn: Optional[sqlite3.Connection] = None
+    conn: sqlite3.Connection | None = None
 
     # universityMap = {
     #     '001': '國立臺灣大學',
@@ -49,10 +52,9 @@ class LookupDb:
             self.conn.close()
 
     def loadDb(self):
-
         return self.universityMap, self.departmentMap
 
-    def lookupByAdmissionIds(self, admissionIds: Iterable[str]) -> Dict[str, Any]:
+    def lookupByAdmissionIds(self, admissionIds: Iterable[str]) -> dict[str, Any]:
         results = {
             # '准考證號': [ '系所編號', ... ],
             # ...
@@ -74,16 +76,14 @@ class LookupDb:
 
         return results
 
-    def lookupByDepartmentIds(self, departmentIds: Iterable[str]) -> Dict[str, Any]:
+    def lookupByDepartmentIds(self, departmentIds: Iterable[str]) -> dict[str, Any]:
         assert self.conn
         cursor = self.conn.execute(
             """
                 SELECT admissionId
                 FROM qualified
                 WHERE departmentId IN ({})
-            """.format(
-                "'" + "','".join(departmentIds) + "'"
-            )
+            """.format("'" + "','".join(departmentIds) + "'")
         )
 
         admissionIds = [result[0] for result in cursor.fetchall()]
@@ -93,21 +93,19 @@ class LookupDb:
     def writeOutSieveResult(
         self,
         outputFile: str,
-        lookupResult: Dict[str, Any],
+        lookupResult: dict[str, Any],
         args: argparse.Namespace,
     ) -> None:
         # output the results (xlsx)
         with pd.ExcelWriter(outputFile, engine="xlsxwriter") as writer:
             workbook = writer.book
 
-            cellFormat = workbook.add_format(
-                {
-                    "align": "left",
-                    "valign": "vcenter",
-                    "text_wrap": True,
-                    "font_size": 9,
-                }
-            )
+            cellFormat = workbook.add_format({
+                "align": "left",
+                "valign": "vcenter",
+                "text_wrap": True,
+                "font_size": 9,
+            })
 
             worksheet = workbook.add_worksheet("第一階段-篩選結果（甄選委員會）")
             worksheet.freeze_panes(1, 1)
@@ -132,7 +130,7 @@ class LookupDb:
     def writeOutSieveResultNthuEe(
         self,
         outputFile: str,
-        lookupResult: Dict[str, Any],
+        lookupResult: dict[str, Any],
         args: argparse.Namespace,
     ) -> None:
         def nthuSort(departmentId):
@@ -165,21 +163,19 @@ class LookupDb:
     def writeOutEntranceResult(
         self,
         outputFile: str,
-        lookupResult: Dict[str, Any],
+        lookupResult: dict[str, Any],
         args: argparse.Namespace,
     ) -> None:
         # output the results (xlsx)
         with pd.ExcelWriter(outputFile, engine="xlsxwriter") as writer:
             workbook = writer.book
 
-            cellFormat = workbook.add_format(
-                {
-                    "align": "left",
-                    "valign": "vcenter",
-                    "text_wrap": True,
-                    "font_size": 9,
-                }
-            )
+            cellFormat = workbook.add_format({
+                "align": "left",
+                "valign": "vcenter",
+                "text_wrap": True,
+                "font_size": 9,
+            })
 
             worksheet = workbook.add_worksheet("第二階段-分發結果（甄選委員會）")
             worksheet.freeze_panes(1, 1)

@@ -1,12 +1,15 @@
-from io import BytesIO
-from PIL import Image
-from pyquery import PyQuery as pq
-from typing import Any, Dict, List, Tuple, TypeVar
+from __future__ import annotations
+
 import base64
 import os
-import pytesseract
 import re
 import sqlite3
+from io import BytesIO
+from typing import Any, TypeVar
+
+import pytesseract
+from PIL import Image
+from pyquery import PyQuery as pq
 
 T = TypeVar("T")
 
@@ -57,13 +60,12 @@ def get_chromium_profile_dir() -> str:
     return os.path.join(get_chromium_dir(), "profile")
 
 
-def loadDb(dbFilepath: str) -> Tuple[Dict[str, str], Dict[str, str]]:
+def loadDb(dbFilepath: str) -> tuple[dict[str, str], dict[str, str]]:
     if not os.path.isfile(dbFilepath):
         raise Exception(f"DB file does not exist: {dbFilepath}")
 
     # connect to db file
     with sqlite3.connect(dbFilepath) as conn:
-
         # build universityMap
         cursor = conn.execute(
             """
@@ -71,7 +73,7 @@ def loadDb(dbFilepath: str) -> Tuple[Dict[str, str], Dict[str, str]]:
                 FROM universities
             """
         )
-        universityMap: Dict[str, str] = {university[0]: university[1] for university in cursor.fetchall()}
+        universityMap: dict[str, str] = {university[0]: university[1] for university in cursor.fetchall()}
 
         # build departmentMap
         cursor = conn.execute(
@@ -81,12 +83,12 @@ def loadDb(dbFilepath: str) -> Tuple[Dict[str, str], Dict[str, str]]:
             """
         )
 
-        departmentMap: Dict[str, str] = {department[0]: department[1] for department in cursor.fetchall()}
+        departmentMap: dict[str, str] = {department[0]: department[1] for department in cursor.fetchall()}
 
     return universityMap, departmentMap
 
 
-def parseWwwComTw(content: str = "") -> Dict[str, Any]:
+def parseWwwComTw(content: str = "") -> dict[str, Any]:
     peopleResult = {
         # '准考證號': {
         #     '_name': '考生姓名',
@@ -200,7 +202,7 @@ def canBeInt(s: Any) -> bool:
         return False
 
 
-def listUnique(theList: List[T], clear: bool = False) -> List[T]:
+def listUnique(theList: list[T], clear: bool = False) -> list[T]:
     theList = list(set(theList))
 
     return list(filter(None, theList)) if clear else theList

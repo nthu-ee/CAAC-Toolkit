@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import datetime
 
 
 class Year:
-
     YEAR_BEGIN = 1911
 
     # the current A.C. year

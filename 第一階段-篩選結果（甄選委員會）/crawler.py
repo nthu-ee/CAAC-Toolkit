@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import os
 import sys
@@ -14,14 +16,12 @@ parser.add_argument(
     default=Year.YEAR_CURRENT,
     help="The year of data to be processed. (ex: 2017 or 106 is the same)",
 )
-# fmt: off
 parser.add_argument(
     "--projectBaseUrl",
     type=str,
     default="",
     help="The (base) URL of the CAAC HTML page.",
 )
-# fmt: on
 args = parser.parse_args()
 
 year = Year.taiwanize(args.year)

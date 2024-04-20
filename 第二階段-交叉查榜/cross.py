@@ -1,18 +1,19 @@
-from pyppeteer import launch
+from __future__ import annotations
+
 import argparse
 import asyncio
 import datetime
 import os
-import pandas as pd
 import re
 import sys
 import time
 
+import pandas as pd
+from pyppeteer import launch
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from caac_package.Crawler import Crawler
-from caac_package.ProjectConfig import ProjectConfig
-from caac_package.Year import Year
 import caac_package.functions as caac_funcs
+from caac_package.Year import Year
 
 parser = argparse.ArgumentParser(description="An utility for looking up Univerisy Entrance result.")
 parser.add_argument(
@@ -100,7 +101,7 @@ def splitUniversityNameAndDepartmentName(fullName: str):
 
 
 def nthuSort(department):
-    departmentId, departmentResult = department
+    departmentId, _ = department
 
     # special attribute like '_name'
     if departmentId.startswith("_"):
@@ -126,7 +127,7 @@ fixPyppeteer()
 
 t_start = time.time()
 
-with open("department_ids.txt", "r") as f:
+with open("department_ids.txt") as f:
     departmentIds = f.read().split()
     # trim spaces
     departmentIds = [departmentId.strip() for departmentId in departmentIds]
@@ -137,7 +138,7 @@ with open("department_ids.txt", "r") as f:
 departmentIdsUnique = list(set(departmentIds))
 
 
-async def puppetFetchCrossUrls(urls):
+async def puppetFetchCrossUrls(urls) -> None:
     global crossResults
 
     browser = await launch(
@@ -192,7 +193,6 @@ sheetFmts = {
     "applyState-dispatched": {"bg_color": "#99D8FF"},
 }
 
-# fmt: off
 sheetData = [
     # (row 0)
     # [
@@ -208,14 +208,13 @@ sheetData = [
     # ],
     # ...
     [
-        { 'text': '准考證號' },
-        { 'text': '考生姓名' },
-        { 'text': '分發結果' },
-        { 'text': '校系名稱' },
-        { 'text': '榜單狀態' },
+        {"text": "准考證號"},
+        {"text": "考生姓名"},
+        {"text": "分發結果"},
+        {"text": "校系名稱"},
+        {"text": "榜單狀態"},
     ],
 ]
-# fmt: on
 
 # get a sorted version crossResults by its key (admissionId)
 crossResultsSorted = [(key, crossResults[key]) for key in sorted(crossResults.keys())]
@@ -277,27 +276,23 @@ for crossResult in crossResultsSorted:
         if isDispatched:
             applyType = "dispatched"
 
-        row.append(
-            {
-                "text": f"{universityName}\n{departmentName}",
-                "fmts": (
-                    # NTHU specialization
-                    ["department", "nthuEe"]
-                    if "清華大學" in universityName and "電機工程" in departmentName
-                    else ["department"]
-                ),
-            }
-        )
+        row.append({
+            "text": f"{universityName}\n{departmentName}",
+            "fmts": (
+                # NTHU specialization
+                ["department", "nthuEe"]
+                if "清華大學" in universityName and "電機工程" in departmentName
+                else ["department"]
+            ),
+        })
 
         applyStateIcon = "👑" if isDispatched else ""
         applyStateNormalized = caac_funcs.normalizeApplyStateE2C(applyState)
 
-        row.append(
-            {
-                "text": f"{applyStateIcon} {applyStateNormalized}".strip(),
-                "fmts": ["applyState", f"applyState-{applyType}"],
-            }
-        )
+        row.append({
+            "text": f"{applyStateIcon} {applyStateNormalized}".strip(),
+            "fmts": ["applyState", f"applyState-{applyType}"],
+        })
     sheetData.append(row)
 
 # output the results (xlsx)

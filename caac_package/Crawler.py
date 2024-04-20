@@ -1,19 +1,22 @@
-from .ProjectConfig import ProjectConfig
-from concurrent.futures import ThreadPoolExecutor
-from pyquery import PyQuery as pq
-from typing import Iterable, List, Optional
-import cloudscraper
+from __future__ import annotations
+
 import codecs
-import lxml
-import lxml.etree
 import os
 import re
 import sqlite3
 import time
+from collections.abc import Iterable
+from concurrent.futures import ThreadPoolExecutor
+
+import cloudscraper
+import lxml
+import lxml.etree
+from pyquery import PyQuery as pq
+
+from .ProjectConfig import ProjectConfig
 
 
 class Crawler:
-
     year = 0
     projectBaseUrl = ""
 
@@ -55,8 +58,8 @@ class Crawler:
         if showMessage:
             print(f"[Crawler] Files are stored in: {self.resultDir}")
 
-    def fetchAndSaveCollegeList(self) -> List[str]:
-        departmentLists: List[str] = []
+    def fetchAndSaveCollegeList(self) -> list[str]:
+        departmentLists: list[str] = []
 
         # the user may give a wrong URL in the last run
         # in that case, we overwrite the old file and run again
@@ -74,8 +77,8 @@ class Crawler:
 
         return departmentLists
 
-    def fetchAndSaveDepartmentLists(self, filepaths: Iterable[str]) -> List[str]:
-        departmentApplys: List[str] = []
+    def fetchAndSaveDepartmentLists(self, filepaths: Iterable[str]) -> list[str]:
+        departmentApplys: list[str] = []
 
         def workerFetchPage(filepath: str) -> None:
             content = self.fetchAndSavePage(self.projectBaseUrl + filepath, overwrite=False, log=True)
@@ -110,7 +113,7 @@ class Crawler:
         filepath = url.replace(self.projectBaseUrl, "")
         filepathAbsolute = os.path.join(self.resultDir, filepath)
         if not overwrite and os.path.isfile(filepathAbsolute):
-            with open(filepathAbsolute, "r", encoding="utf-8") as f:
+            with open(filepathAbsolute, encoding="utf-8") as f:
                 if log is True:
                     print(f"[Local] {url}")
                 return f.read()
@@ -143,7 +146,7 @@ class Crawler:
         print("[crawler_caac] DB Gen: gathering data from the source...")
 
         # build universityMap
-        with open(os.path.join(self.resultDir, "collegeList.htm"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.resultDir, "collegeList.htm"), encoding="utf-8") as f:
             content = f.read()
             founds = re.finditer(r"\(([0-9]{3})\)\d*([\w\s]+)", content)
             for found in founds:
@@ -162,7 +165,7 @@ class Crawler:
                     continue
 
                 departmentId = os.path.splitext(file)[0].rstrip("LN")
-                with open(os.path.join(subdir, file), "r", encoding="utf-8") as f:
+                with open(os.path.join(subdir, file), encoding="utf-8") as f:
                     content = f.read()
                     # let's find something like "(013032)電子工程學系(甲組)"
                     founds = re.finditer(r"\(([0-9]{6})\)\s*([\w\s\[\]［］()（）]+)", content)
@@ -245,7 +248,7 @@ class Crawler:
         print("[crawler_caac] DB Gen: done.")
 
     @classmethod
-    def getPage(cls, url: str, retry_s: float = 3.0) -> Optional[str]:
+    def getPage(cls, url: str, retry_s: float = 3.0) -> str | None:
         """get a certain web page"""
 
         while True:
