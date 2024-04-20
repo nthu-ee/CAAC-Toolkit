@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import argparse
-import collections
 import datetime
 import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import caac_package.functions as caac_funcs
-from caac_package.LookupDb import LookupDb
-from caac_package.ProjectConfig import ProjectConfig
-from caac_package.Year import Year
+from caac_package.lookup_db import LookupDb
+from caac_package.project_config import ProjectConfig
+from caac_package.year import Year
 
 parser = argparse.ArgumentParser(description="A database lookup utility for CAAC website.")
 parser.add_argument(
@@ -20,12 +19,12 @@ parser.add_argument(
     help="The year of data to be processed. (ex: 2017 or 106 is the same)",
 )
 parser.add_argument(
-    "--admissionIds",
+    "--admission-ids",
     default="",
     help="Admission IDs that are going to be looked up. (separate by commas)",
 )
 parser.add_argument(
-    "--departmentIds",
+    "--department-ids",
     default="",
     help="Department IDs that are going to be looked up. (separate by commas)",
 )
@@ -34,12 +33,12 @@ parser.add_argument(
     default=datetime.datetime.now().strftime("result_%Y%m%d_%H%M%S.xlsx"),
     help="The file to output results. (.xlsx file)",
 )
-parser.add_argument("--outputFormat", default="", help='Leave it blank or "NthuEe"')
+parser.add_argument("--output-format", default="", help='Leave it blank or "NthuEe"')
 args = parser.parse_args()
 
 year = Year.taiwanize(args.year)
-resultFilepath = args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else f"{args.output}.xlsx"
-dbFilepath = ProjectConfig.getCrawledDbFile(year, "apply_entrance")
+result_filepath = args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else f"{args.output}.xlsx"
+db_filepath = ProjectConfig.get_crawled_db_file(year, "apply_entrance")
 
 # variables
 results = {
@@ -47,57 +46,57 @@ results = {
     # ...
 }
 
-lookup = LookupDb(dbFilepath)
-lookup.loadDb()
+lookup = LookupDb(db_filepath)
+lookup.load_db()
 
 # do lookup
-if args.admissionIds:
-    if args.admissionIds == "@file":
+if args.admission_ids:
+    if args.admission_ids == "@file":
         with open("admission_ids.txt") as f:
-            admissionIds = f.read().split()
+            admission_ids = f.read().split()
             # trim spaces
-            admissionIds = [departmentId.strip() for departmentId in admissionIds]
+            admission_ids = map(str.strip, admission_ids)
             # filter out those are not integers
-            admissionIds = list(filter(lambda x: caac_funcs.canBeInt(x), admissionIds))
-
-        # unique
-        admissionIds = list(set(admissionIds))
+            admission_ids = filter(caac_funcs.can_be_int, admission_ids)
     else:
-        admissionIds = caac_funcs.listUnique(args.admissionIds.split(","), clear=True)
+        admission_ids = args.admission_ids.split(",")
 
-    result = lookup.lookupByAdmissionIds(admissionIds)
+    admission_ids = list(caac_funcs.unique(admission_ids, clear=True))
+
+    result = lookup.lookup_by_admission_ids(admission_ids)
     results.update(result)
 
 # do lookup
-if args.departmentIds:
-    if args.departmentIds == "@file":
+if args.department_ids:
+    if args.department_ids == "@file":
         with open("department_ids.txt") as f:
-            departmentIds = f.read().split()
+            department_ids = f.read().split()
             # trim spaces
-            departmentIds = [departmentId.strip() for departmentId in departmentIds]
+            department_ids = map(str.strip, department_ids)
             # filter out those are not integers
-            departmentIds = list(filter(lambda x: caac_funcs.canBeInt(x), departmentIds))
-
-        # unique
-        departmentIds = list(set(departmentIds))
+            department_ids = filter(caac_funcs.can_be_int, department_ids)
     else:
-        departmentIds = caac_funcs.listUnique(args.departmentIds.split(","), clear=True)
+        department_ids = args.department_ids.split(",")
 
-    result = lookup.lookupByDepartmentIds(departmentIds)
+    department_ids = list(caac_funcs.unique(department_ids, clear=True))
+
+    result = lookup.lookup_by_department_ids(department_ids)
     results.update(result)
 
-# sort the result dict with admissionIds (ascending)
-results = collections.OrderedDict(sorted(results.items()))
+# sort the result dict with admission_ids (ascending)
+results = dict(sorted(results.items()))
 
 # delete the old xlsx file
-if os.path.isfile(resultFilepath):
-    os.remove(resultFilepath)
+if os.path.isfile(result_filepath):
+    os.remove(result_filepath)
 
 # write result to a xlsx file
-writeOutMethod = f"writeOutEntranceResult{args.outputFormat}"
+output_format = args.output_format
+output_format_prefixed = f"_{output_format}" if output_format else ""
+write_out_method = f"write_out_entrance_result{output_format_prefixed}"
 try:
-    getattr(lookup, writeOutMethod)(resultFilepath, results, args)
+    getattr(lookup, write_out_method)(result_filepath, results, args)
 except Exception:
-    raise Exception(f"Unknown option: --outputFormat={args.outputFormat}")
+    raise Exception(f"Unknown option: --output-format={output_format}")
 
 print(results)

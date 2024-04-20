@@ -1,5 +1,5 @@
-@ECHO OFF
+@echo off
 
 python cross.py
 
-PAUSE
+pause

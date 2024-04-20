@@ -1,5 +1,5 @@
-@ECHO OFF
+@echo off
 
-python lookup.py --admissionIds="@file"
+python lookup.py --admission-ids="@file"
 
-PAUSE
+pause

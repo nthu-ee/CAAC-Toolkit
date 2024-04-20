@@ -3,11 +3,14 @@ from __future__ import annotations
 import base64
 import os
 import re
-import sqlite3
+from collections import ChainMap
+from collections.abc import Generator, Iterable
 from io import BytesIO
+from pathlib import Path
 from typing import Any, TypeVar
 
 import pytesseract
+from loguru import logger
 from PIL import Image
 from pyquery import PyQuery as pq
 
@@ -17,21 +20,22 @@ T = TypeVar("T")
 def data_uri_to_image(data_uri: str) -> Image.Image:
     base64_data = re.sub(r"^data:image/[^;]+;base64,", "", data_uri)
     byte_data = base64.b64decode(base64_data)
-    image_data = BytesIO(byte_data)
-
-    return Image.open(image_data)
+    return Image.open(BytesIO(byte_data))
 
 
 def ocr_data_uri(data_uri: str) -> str:
     # ensure that tesseract.exe is in PATH
-    paths = [
-        # r"C:\Program Files\Tesseract-OCR",
-        # r"C:\Program Files (x86)\Tesseract-OCR",
-        get_tesseract_dir(),
+    extra_paths: list[str] = [
+        # R"C:\Program Files\Tesseract-OCR",
+        # R"C:\Program Files (x86)\Tesseract-OCR",
+        str(get_tesseract_dir()),
     ]
-    for path in paths:
-        if path not in os.environ["PATH"]:
-            os.environ["PATH"] += os.pathsep + path
+    os.environ["PATH"] = os.pathsep.join(
+        ChainMap(
+            {path: True for path in os.environ["PATH"].split(os.pathsep)},
+            {path: True for path in extra_paths},
+        ).keys()
+    )
 
     img = data_uri_to_image(data_uri)
     result = pytesseract.image_to_string(img)
@@ -40,129 +44,97 @@ def ocr_data_uri(data_uri: str) -> str:
     return result
 
 
-def get_tesseract_dir() -> str:
-    from caac_package.ProjectConfig import ProjectConfig
+def get_tesseract_dir() -> Path:
+    from caac_package.project_config import ProjectConfig
 
-    return os.path.join(ProjectConfig.ROOT_DIR, "bin", "tesseract-ocr")
-
-
-def get_chromium_dir() -> str:
-    from caac_package.ProjectConfig import ProjectConfig
-
-    return os.path.join(ProjectConfig.ROOT_DIR, "bin", "chromium")
+    return ProjectConfig.ROOT_DIR / "bin/tesseract-ocr"
 
 
-def get_chromium_binary_path() -> str:
-    return os.path.join(get_chromium_dir(), "bin", "chrome.exe")
+def get_chromium_dir() -> Path:
+    from caac_package.project_config import ProjectConfig
+
+    return ProjectConfig.ROOT_DIR / "bin/chromium"
 
 
-def get_chromium_profile_dir() -> str:
-    return os.path.join(get_chromium_dir(), "profile")
+def get_chromium_binary_path() -> Path:
+    return get_chromium_dir() / "bin/chrome.exe"
 
 
-def loadDb(dbFilepath: str) -> tuple[dict[str, str], dict[str, str]]:
-    if not os.path.isfile(dbFilepath):
-        raise Exception(f"DB file does not exist: {dbFilepath}")
-
-    # connect to db file
-    with sqlite3.connect(dbFilepath) as conn:
-        # build universityMap
-        cursor = conn.execute(
-            """
-                SELECT id, name
-                FROM universities
-            """
-        )
-        universityMap: dict[str, str] = {university[0]: university[1] for university in cursor.fetchall()}
-
-        # build departmentMap
-        cursor = conn.execute(
-            """
-                SELECT id, name
-                FROM departments
-            """
-        )
-
-        departmentMap: dict[str, str] = {department[0]: department[1] for department in cursor.fetchall()}
-
-    return universityMap, departmentMap
+def get_chromium_profile_dir() -> Path:
+    return get_chromium_dir() / "profile"
 
 
-def parseWwwComTw(content: str = "") -> dict[str, Any]:
-    peopleResult = {
+def parse_www_com_tw(content: str = "") -> dict[str, Any]:
+    people_result: dict[str, Any] = {
         # '准考證號': {
         #     '_name': '考生姓名',
         #     '系所編號1': {
         #         '_name': '國立臺灣大學醫學系(繁星第八類)',
-        #         'isDispatched': False,
-        #         'applyState': 'primary',
+        #         'is_dispatched': False,
+        #         'apply_state': 'primary',
         #     }
         #     ...
         # },
         # ...
     }
 
-    admissionIdRegex = r"\b(\d{8})\b"
-    departmentIdRegex = r"_(\d{6,7})_"
+    admission_id_regex = re.compile(r"\b(\d{8})\b")
+    department_id_regex = re.compile(r"_(\d{6,7})_")
 
     # sanitization
     content = content.replace("\r", "").replace("\n", " ")
     # get the result html table
-    personRows = pq(content)("#mainContent > table:first > tbody > tr")
+    person_rows = pq(content)("#mainContent > table:first > tbody > tr")
 
-    for personRow in personRows.items():
-        html = personRow.outer_html()
+    for person_row in person_rows.items():
+        html = person_row.outer_html()
 
-        matches = re.search(r'data:image/[^;]+;base64,[^\'"]*', html)
-        if not matches:
+        if not (matches := re.search(r'data:image/[^;]+;base64,[^\'"]*', str(html))):
             continue
 
-        admissionId = ocr_data_uri(matches.group(0))
+        admission_id = ocr_data_uri(matches.group(0))
         # simple sanitization...
-        admissionId = re.sub(r"[^0-9a-zA-Z]+", "", admissionId)
+        admission_id = re.sub(r"[^0-9a-zA-Z]+", "", admission_id)
 
-        if not re.match(admissionIdRegex, admissionId):
-            print(f"Wrong admission ID: {admissionId}")
+        if not admission_id_regex.match(admission_id):
+            logger.error(f"Wrong admission ID: {admission_id}")
             continue
 
-        personName = personRow("td:nth-child(4)").text().strip()
-        personResult = {admissionId: {"_name": personName}}
+        person_name = str(person_row("td:nth-child(4)").text()).strip()
+        person_result: dict[str, dict[str, Any]] = {admission_id: {"_name": person_name}}
 
-        applyTableRows = personRow("td:nth-child(5) table:first > tbody > tr")
-
-        for applyTableRow in applyTableRows.items():
-            findDepartmentId = re.search(departmentIdRegex, applyTableRow.outer_html())
-
-            if findDepartmentId is None:
+        apply_table_rows = person_row("td:nth-child(5) table:first > tbody > tr")
+        for apply_table_row in apply_table_rows.items():
+            if not (find_department_id := department_id_regex.search(str(apply_table_row.outer_html()))):
                 continue
 
-            departmentId = findDepartmentId.group(1)
-            departmentName = applyTableRow("td:nth-child(2)").text().strip()
-            applyState = applyTableRow("td:nth-child(3)").text().strip()
+            department_id = str(find_department_id.group(1))
+            department_name = str(apply_table_row("td:nth-child(2)").text()).strip()
+            apply_state = str(apply_table_row("td:nth-child(3)").text()).strip()
 
-            personResult[admissionId][departmentId] = {
-                "_name": departmentName,
-                "isDispatched": "分發錄取" in applyTableRow.outer_html(),
-                "applyState": normalizeApplyStateC2E(applyState),
+            person_result[admission_id][department_id] = {
+                "_name": department_name,
+                "is_dispatched": "分發錄取" in str(apply_table_row.outer_html()),
+                "apply_state": normalize_apply_state_c2e(apply_state),
             }
 
-        print(f"Parsed data: {personResult}\n")
+        logger.info(f"Parsed data: {person_result}")
 
-        peopleResult.update(personResult)
+        people_result.update(person_result)
 
-    return peopleResult
+    return people_result
 
 
-def normalizeApplyStateC2E(chinese: str) -> str:
+def normalize_apply_state_c2e(chinese: str) -> str:
     # 正取
     if "正" in chinese:
         order = re.search(r"(\d+)", chinese)
-        order = "?" if order is None else order.group(1)
+        order = order.group(1) if order else "?"
         return f"primary-{order}"
     # 備取
     if "備" in chinese:
         order = re.search(r"(\d+)", chinese)
-        order = "?" if order is None else order.group(1)
+        order = order.group(1) if order else "?"
         return f"spare-{order}"
     # 落榜
     if "落" in chinese:
@@ -171,7 +143,7 @@ def normalizeApplyStateC2E(chinese: str) -> str:
     return "unknown"
 
 
-def normalizeApplyStateE2C(english: str) -> str:
+def normalize_apply_state_e2c(english: str) -> str:
     # 正取
     if "primary" in english:
         state = english.split("-")
@@ -194,7 +166,7 @@ def normalizeApplyStateE2C(english: str) -> str:
     return "不明"
 
 
-def canBeInt(s: Any) -> bool:
+def can_be_int(s: Any) -> bool:
     try:
         int(s)
         return True
@@ -202,7 +174,9 @@ def canBeInt(s: Any) -> bool:
         return False
 
 
-def listUnique(theList: list[T], clear: bool = False) -> list[T]:
-    theList = list(set(theList))
-
-    return list(filter(None, theList)) if clear else theList
+def unique(items: Iterable[T], *, clear: bool = False) -> Generator[T, None, None]:
+    tmp = {item: True for item in items}
+    items_it = tmp.keys()
+    if clear:
+        items_it = filter(None, items_it)
+    yield from items_it

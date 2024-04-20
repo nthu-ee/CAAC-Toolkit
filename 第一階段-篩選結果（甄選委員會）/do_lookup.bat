@@ -1,12 +1,12 @@
-@ECHO OFF
+@echo off
 
-REM The department ID of NTHU EE "Jia" Group
-SET department_NthuEe_Jia=011312
-REM The department ID of NTHU EE "Yi" Group
-SET department_NthuEe_Yi=011322
+rem The department ID of NTHU EE "Jia" Group
+set department_nthuee_jia=011312
+rem The department ID of NTHU EE "Yi" Group
+set department_nthuee_yi=011322
 
-python lookup.py --outputFormat="NthuEe" --output="NTHU-EE-A.xlsx" --departmentIds="%department_NthuEe_Jia%"
-python lookup.py --outputFormat="NthuEe" --output="NTHU-EE-B.xlsx" --departmentIds="%department_NthuEe_Yi%"
-python lookup.py --outputFormat="NthuEe" --output="NTHU-EE-AB.xlsx" --departmentIds="%department_NthuEe_Jia%,%department_NthuEe_Yi%"
+python lookup.py --output-format="nthu_ee" --output="NTHU-EE-A.xlsx" --department-ids="%department_nthuee_jia%"
+python lookup.py --output-format="nthu_ee" --output="NTHU-EE-B.xlsx" --department-ids="%department_nthuee_yi%"
+python lookup.py --output-format="nthu_ee" --output="NTHU-EE-AB.xlsx" --department-ids="%department_nthuee_jia%,%department_nthuee_yi%"
 
-PAUSE
+pause
