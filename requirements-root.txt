@@ -1,8 +1,0 @@
-# This file is for root dependencies
-
-cloudscraper
-pandas
-pyppeteer
-pyquery
-pytesseract
-XlsxWriter
