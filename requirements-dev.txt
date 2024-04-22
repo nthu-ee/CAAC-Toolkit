@@ -25,14 +25,8 @@ lxml==5.2.1
 mypy==1.9.0
 mypy-extensions==1.0.0
     # via mypy
-numpy==1.26.4
-    # via
-    #   pandas
-    #   pandas-stubs
 packaging==24.0
     # via pytesseract
-pandas==2.2.2
-pandas-stubs==2.2.1.240316
 pillow==10.3.0
     # via pytesseract
 pyee==11.1.0
@@ -42,10 +36,6 @@ pyparsing==3.1.2
 pyppeteer==2.0.0
 pyquery==2.0.0
 pytesseract==0.3.10
-python-dateutil==2.9.0.post0
-    # via pandas
-pytz==2024.1
-    # via pandas
 requests==2.31.0
     # via
     #   cloudscraper
@@ -53,18 +43,12 @@ requests==2.31.0
 requests-toolbelt==1.0.0
     # via cloudscraper
 ruff==0.4.1
-six==1.16.0
-    # via python-dateutil
 tqdm==4.66.2
     # via pyppeteer
-types-pytz==2024.1.0.20240417
-    # via pandas-stubs
 typing-extensions==4.11.0
     # via
     #   mypy
     #   pyee
-tzdata==2024.1
-    # via pandas
 urllib3==1.26.18
     # via
     #   pyppeteer

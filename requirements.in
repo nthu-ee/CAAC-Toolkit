@@ -1,6 +1,5 @@
 cloudscraper
 loguru
-pandas>=2,<3
 pyppeteer
 pyquery==2.*
 pytesseract

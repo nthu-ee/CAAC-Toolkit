@@ -6,5 +6,3 @@ mypy
 ruff>=0.4
 
 # stubs
-
-pandas-stubs>=2,<3

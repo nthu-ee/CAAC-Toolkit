@@ -22,11 +22,8 @@ importlib-metadata==7.1.0
 loguru==0.7.2
 lxml==5.2.1
     # via pyquery
-numpy==1.26.4
-    # via pandas
 packaging==24.0
     # via pytesseract
-pandas==2.2.2
 pillow==10.3.0
     # via pytesseract
 pyee==11.1.0
@@ -36,24 +33,16 @@ pyparsing==3.1.2
 pyppeteer==2.0.0
 pyquery==2.0.0
 pytesseract==0.3.10
-python-dateutil==2.9.0.post0
-    # via pandas
-pytz==2024.1
-    # via pandas
 requests==2.31.0
     # via
     #   cloudscraper
     #   requests-toolbelt
 requests-toolbelt==1.0.0
     # via cloudscraper
-six==1.16.0
-    # via python-dateutil
 tqdm==4.66.2
     # via pyppeteer
 typing-extensions==4.11.0
     # via pyee
-tzdata==2024.1
-    # via pandas
 urllib3==1.26.18
     # via
     #   pyppeteer

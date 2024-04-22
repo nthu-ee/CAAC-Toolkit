@@ -7,12 +7,10 @@ import os
 import re
 import sys
 import time
-from typing import cast
 
-import pandas as pd
+import xlsxwriter
 from loguru import logger
 from pyppeteer import launch
-from xlsxwriter import Workbook
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import caac_package.functions as caac_funcs
@@ -292,16 +290,12 @@ for admission_id, person_result in cross_results_sorted:
     sheet_data.append(row)
 
 # output the results (xlsx)
-with pd.ExcelWriter(result_filepath, engine="xlsxwriter") as writer:
-    workbook = cast(Workbook, writer.book)
+with xlsxwriter.Workbook(result_filepath) as wb:
+    ws = wb.add_worksheet("第二階段-交叉查榜")
+    ws.freeze_panes(1, 3)
 
-    worksheet = workbook.add_worksheet("第二階段-交叉查榜")
-    worksheet.freeze_panes(1, 3)
-
-    row_cnt = 0
-    for row in sheet_data:
-        col_cnt = 0
-        for col in row:
+    for row_num, row in enumerate(sheet_data):
+        for col_num, col in enumerate(row):
             # determine the cell format
             cell_fmt = sheet_fmts["base"].copy()
             if "fmts" in col:
@@ -309,9 +303,7 @@ with pd.ExcelWriter(result_filepath, engine="xlsxwriter") as writer:
                     if fmt in sheet_fmts:
                         cell_fmt.update(sheet_fmts[fmt])
             # apply the cell format
-            worksheet.write(row_cnt, col_cnt, col["text"], workbook.add_format(cell_fmt))
-            col_cnt += 1
-        row_cnt += 1
+            ws.write(row_num, col_num, col["text"], wb.add_format(cell_fmt))
 
 t_end = time.time()
 

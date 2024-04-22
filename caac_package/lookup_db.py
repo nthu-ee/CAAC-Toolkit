@@ -4,10 +4,9 @@ import argparse
 import sqlite3
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
-import pandas as pd
-from xlsxwriter import Workbook
+import xlsxwriter
 
 
 class LookupDb:
@@ -86,32 +85,27 @@ class LookupDb:
         args: argparse.Namespace,
     ) -> None:
         # output the results (xlsx)
-        with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
-            workbook = cast(Workbook, writer.book)
-
-            cell_format = workbook.add_format({
+        with xlsxwriter.Workbook(output_file) as wb:
+            cell_format = wb.add_format({
                 "align": "left",
                 "valign": "vcenter",
                 "text_wrap": True,
                 "font_size": 9,
             })
 
-            worksheet = workbook.add_worksheet("第一階段-篩選結果（甄選委員會）")
-            worksheet.freeze_panes(1, 1)
+            ws = wb.add_worksheet("第一階段-篩選結果（甄選委員會）")
+            ws.freeze_panes(1, 1)
 
-            worksheet.write_row(0, 0, ["准考證號", "校名與系所"], cell_format)
+            ws.write_row(0, 0, ["准考證號", "校名與系所"], cell_format)
 
-            row_cnt = 1
-            for admission_id, department_ids in lookup_result.items():
+            for row_num, (admission_id, department_ids) in enumerate(lookup_result.items(), 1):
                 applieds: list[str] = []  # ['國立臺灣大學 化學工程學系', ...]
 
                 for department_id in department_ids:
                     university_id = department_id[:3]
                     applieds.append(f"{self.university_map[university_id]}\n{self.department_map[department_id]}")
 
-                worksheet.write_row(row_cnt, 0, [int(admission_id), *applieds], cell_format)
-
-                row_cnt += 1
+                ws.write_row(row_num, 0, [int(admission_id), *applieds], cell_format)
 
     def write_out_sieve_result_nthu_ee(
         self,
@@ -151,28 +145,24 @@ class LookupDb:
         args: argparse.Namespace,
     ) -> None:
         # output the results (xlsx)
-        with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
-            workbook = cast(Workbook, writer.book)
-
-            cell_format = workbook.add_format({
+        with xlsxwriter.Workbook(output_file) as wb:
+            cell_format = wb.add_format({
                 "align": "left",
                 "valign": "vcenter",
                 "text_wrap": True,
                 "font_size": 9,
             })
 
-            worksheet = workbook.add_worksheet("第二階段-分發結果（甄選委員會）")
-            worksheet.freeze_panes(1, 1)
+            ws = wb.add_worksheet("第二階段-分發結果（甄選委員會）")
+            ws.freeze_panes(1, 1)
 
-            worksheet.write_row(0, 0, ["准考證號", "分發結果"], cell_format)
+            ws.write_row(0, 0, ["准考證號", "分發結果"], cell_format)
 
-            row_cnt = 1
-            for admission_id, department_ids in lookup_result.items():
+            for row_num, (admission_id, department_ids) in enumerate(lookup_result.items(), 1):
                 applieds: list[str] = []  # ['國立臺灣大學 化學工程學系', ...]
 
                 for department_id in department_ids:
                     university_id = department_id[:3]
                     applieds.append(f"{self.university_map[university_id]}\n{self.department_map[department_id]}")
 
-                worksheet.write_row(row_cnt, 0, [int(admission_id), *applieds], cell_format)
-                row_cnt += 1
+                ws.write_row(row_num, 0, [int(admission_id), *applieds], cell_format)
