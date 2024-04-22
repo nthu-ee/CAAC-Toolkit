@@ -14,17 +14,8 @@ class LookupDb:
     # db handle
     conn: sqlite3.Connection | None = None
 
-    # university_map = {
-    #     '001': '國立臺灣大學',
-    #     ...
-    # }
-    university_map: dict[str, str] = {}
-
-    # department_map = {
-    #     '001012': '中國文學系',
-    #     ...
-    # }
-    department_map: dict[str, str] = {}
+    university_map: dict[str, str] = {}  # {"001: "國立臺灣大學", ...}
+    department_map: dict[str, str] = {}  # {"001012": "中國文學系", ...}
 
     def __init__(self, db_file: str | Path) -> None:
         if not (db_file := Path(db_file)).is_file():
@@ -56,10 +47,7 @@ class LookupDb:
         return self.university_map, self.department_map
 
     def lookup_by_admission_ids(self, admission_ids: Iterable[str]) -> dict[str, Any]:
-        results: dict[str, list[str]] = {
-            # '准考證號': [ '系所編號', ... ],
-            # ...
-        }
+        results: dict[str, list[str]] = {}  # {"准考證號": ["系所編號", ...], ...}
 
         assert self.conn
         for admission_id in admission_ids:
@@ -115,10 +103,7 @@ class LookupDb:
 
             row_cnt = 1
             for admission_id, department_ids in lookup_result.items():
-                applieds: list[str] = [
-                    # '國立臺灣大學 化學工程學系',
-                    # ...
-                ]
+                applieds: list[str] = []  # ['國立臺灣大學 化學工程學系', ...]
 
                 for department_id in department_ids:
                     university_id = department_id[:3]
@@ -183,15 +168,11 @@ class LookupDb:
 
             row_cnt = 1
             for admission_id, department_ids in lookup_result.items():
-                applieds: list[str] = [
-                    # '國立臺灣大學 化學工程學系',
-                    # ...
-                ]
+                applieds: list[str] = []  # ['國立臺灣大學 化學工程學系', ...]
 
                 for department_id in department_ids:
                     university_id = department_id[:3]
                     applieds.append(f"{self.university_map[university_id]}\n{self.department_map[department_id]}")
 
                 worksheet.write_row(row_cnt, 0, [int(admission_id), *applieds], cell_format)
-
                 row_cnt += 1

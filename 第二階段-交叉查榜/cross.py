@@ -113,13 +113,13 @@ def nthu_sort(department):
         # note that in ASCII code, 'Z' > 'B' > 'A'
         # 電機工程 be the later one
         if "電機工程" in department_name:
-            return "Z" + department_id
+            return f"Z{department_id}"
         # other department the the first
         else:
-            return "B" + department_id
+            return f"B{department_id}"
     # other university be the first
     else:
-        return "A" + department_id
+        return f"A{department_id}"
 
 
 fix_pyppeteer()
@@ -220,12 +220,12 @@ cross_results_sorted = [(key, cross_results[key]) for key in sorted(cross_result
 
 # construct sheet_data
 for admission_id, person_result in cross_results_sorted:
-    # '准考證號': {
-    #     '_name': '考生姓名',
-    #     '系所編號1': {
-    #         '_name': '國立臺灣大學醫學系(繁星第八類)',
-    #         'is_dispatched': False,
-    #         'apply_state': 'primary',
+    # "准考證號": {
+    #     "_name": "考生姓名",
+    #     "系所編號1": {
+    #         "_name": "國立臺灣大學醫學系(繁星第八類)",
+    #         "is_dispatched": False,
+    #         "apply_state": "primary",
     #     },
     #     ...
     # },

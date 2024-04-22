@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from collections import defaultdict
-import os
 import re
 import sqlite3
 import time
+from collections import defaultdict
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -119,16 +118,9 @@ class Crawler:
         """Generate a DB file from crawled html files."""
         db_file = ProjectConfig.get_crawled_db_file(self.year, self.apply_stage)
 
-        university_map: dict[str, str] = {
-            # '001': '國立臺灣大學',
-            # ...
-        }
-        department_map: dict[str, str] = {
-            # '001012': '中國文學系',
-            # ...
-        }
-        department_to_admittees: defaultdict[str, list[str]] = defaultdict(list)
-        """E.g., `{'001012': [ '10006201', ... ], ... }`"""
+        university_map: dict[str, str] = {}  # ["001": "國立臺灣大學", ...]
+        department_map: dict[str, str] = {}  # ["001012": "中國文學系", ...]
+        department_to_admittees: defaultdict[str, list[str]] = defaultdict(list)  # {"001012": ["10006201", ...], ...}
 
         logger.info("DB Generation: gathering data from the source...")
 

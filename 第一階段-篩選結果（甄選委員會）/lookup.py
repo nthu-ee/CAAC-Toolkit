@@ -41,10 +41,7 @@ result_filepath = args.output if os.path.splitext(args.output)[1].lower() == ".x
 db_filepath = ProjectConfig.get_crawled_db_file(year, "apply_sieve")
 
 # variables
-results: dict[str, list[str]] = {
-    # '准考證號': [ '系所編號', ... ],
-    # ...
-}
+results: dict[str, list[str]] = {}  # {"准考證號": ["系所編號", ...], ...}
 
 lookup = LookupDb(db_filepath)
 lookup.load_db()

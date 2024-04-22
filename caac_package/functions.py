@@ -14,7 +14,7 @@ from loguru import logger
 from PIL import Image
 from pyquery import PyQuery as pq
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
 def data_uri_to_image(data_uri: str) -> Image.Image:
@@ -66,12 +66,12 @@ def get_chromium_profile_dir() -> Path:
 
 def parse_www_com_tw(content: str = "") -> dict[str, Any]:
     people_result: dict[str, Any] = {
-        # '准考證號': {
-        #     '_name': '考生姓名',
-        #     '系所編號1': {
-        #         '_name': '國立臺灣大學醫學系(繁星第八類)',
-        #         'is_dispatched': False,
-        #         'apply_state': 'primary',
+        # "准考證號": {
+        #     "_name": "考生姓名",
+        #     "系所編號1": {
+        #         "_name": "國立臺灣大學醫學系(繁星第八類)",
+        #         "is_dispatched": False,
+        #         "apply_state": "primary",
         #     }
         #     ...
         # },
@@ -119,7 +119,6 @@ def parse_www_com_tw(content: str = "") -> dict[str, Any]:
             }
 
         logger.info(f"Parsed data: {person_result}")
-
         people_result.update(person_result)
 
     return people_result
@@ -174,7 +173,7 @@ def can_be_int(s: Any) -> bool:
         return False
 
 
-def unique(items: Iterable[T], *, clear: bool = False) -> Generator[T, None, None]:
+def unique(items: Iterable[_T], *, clear: bool = False) -> Generator[_T, None, None]:
     tmp = {item: True for item in items}
     items_it = tmp.keys()
     if clear:
