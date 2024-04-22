@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 import os
 import re
 import sqlite3
@@ -126,10 +127,8 @@ class Crawler:
             # '001012': '中國文學系',
             # ...
         }
-        department_to_admittees: dict[str, list[str]] = {
-            # '001012': [ '10006201', ... ],
-            # ...
-        }
+        department_to_admittees: defaultdict[str, list[str]] = defaultdict(list)
+        """E.g., `{'001012': [ '10006201', ... ], ... }`"""
 
         logger.info("DB Generation: gathering data from the source...")
 
@@ -141,24 +140,21 @@ class Crawler:
                 university_map[found.group(1)] = found.group(2).strip()
 
         # build department_map and department_to_admittees
-        for subdir, _, files in os.walk(self.result_dir):
-            logger.info(f"Extract data from {subdir}")
+        for path in self.result_dir.rglob("*"):
+            if not (path.is_file() and path.suffix in {".htm", ".html"}):
+                continue
 
-            for file in files:
-                if os.path.splitext(file)[1] not in {".htm", ".html"}:
-                    continue
-
-                department_id = os.path.splitext(file)[0].rstrip("LN")
-                with open(os.path.join(subdir, file), encoding="utf-8") as f:
-                    content = f.read()
-                    # let's find something like "(013032)電子工程學系(甲組)"
-                    for found in re.finditer(r"\(([0-9]{6})\)\s*([\w\s\[\]［］()（）]+)", content):
-                        department_map[found.group(1)] = found.group(2).strip()
-                    # let's find something like "10008031" (學測准考證號)
-                    for found in re.finditer(r"\b([0-9]{8})\b", content):
-                        if department_id not in department_to_admittees:
-                            department_to_admittees[department_id] = []
-                        department_to_admittees[department_id].append(found.group(1))
+            department_id = path.stem
+            with open(path, encoding="utf-8") as f:
+                content = f.read()
+                # let's find something like "(013032)電子工程學系(甲組)"
+                for found in re.finditer(r"\(([0-9]{6})\)\s*([\w\s\[\]［］()（）]+)", content):
+                    # E.g., the ID of "(013062)資訊工程學系(乙組)［離島外加名額］" is actually "013062L"
+                    # So, we can't use `found.group(1)` directly because it doesn't contain the trailing "L".
+                    department_map[department_id] = found.group(2).strip()
+                # let's find something like "10008031" (學測准考證號)
+                for found in re.finditer(r"\b([0-9]{8})\b", content):
+                    department_to_admittees[department_id].append(found.group(1))
 
         logger.info("DB Generation: filling data into the DB file.")
 
