@@ -9,10 +9,7 @@ certifi==2024.2.2
 charset-normalizer==3.3.2
     # via requests
 cloudscraper==1.2.71
-colorama==0.4.6
-    # via
-    #   loguru
-    #   tqdm
+    # via -r requirements.in
 cssselect==1.2.0
     # via pyquery
 idna==3.7
@@ -20,9 +17,11 @@ idna==3.7
 importlib-metadata==7.1.0
     # via pyppeteer
 loguru==0.7.2
+    # via -r requirements.in
 lxml==5.2.1
     # via pyquery
 mypy==1.9.0
+    # via -r requirements-dev.in
 mypy-extensions==1.0.0
     # via mypy
 packaging==24.0
@@ -34,15 +33,19 @@ pyee==11.1.0
 pyparsing==3.1.2
     # via cloudscraper
 pyppeteer==2.0.0
+    # via -r requirements.in
 pyquery==2.0.0
+    # via -r requirements.in
 pytesseract==0.3.10
-requests==2.31.0
+    # via -r requirements.in
+requests==2.32.0
     # via
     #   cloudscraper
     #   requests-toolbelt
 requests-toolbelt==1.0.0
     # via cloudscraper
 ruff==0.4.1
+    # via -r requirements-dev.in
 tqdm==4.66.2
     # via pyppeteer
 typing-extensions==4.11.0
@@ -55,8 +58,7 @@ urllib3==1.26.18
     #   requests
 websockets==10.4
     # via pyppeteer
-win32-setctime==1.1.0
-    # via loguru
 xlsxwriter==3.2.0
+    # via -r requirements.in
 zipp==3.18.1
     # via importlib-metadata
