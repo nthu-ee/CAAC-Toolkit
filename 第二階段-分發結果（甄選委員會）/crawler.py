@@ -28,7 +28,7 @@ year = Year.taiwanize(args.year)
 
 t_start = time.time()
 
-crawler = Crawler(year, "apply_entrance", args.project_base_url)
+crawler = Crawler(year, "apply_entrance", args.project_index_url)
 crawler.run(show_message=True)
 
 t_end = time.time()
