@@ -18,6 +18,8 @@ from .project_config import ProjectConfig
 
 
 class Crawler:
+    FAILED_URLS = []
+
     def __init__(self, year: int, apply_stage: str, project_base_url: str) -> None:
         self.year = year
         self.apply_stage = apply_stage
@@ -48,6 +50,14 @@ class Crawler:
         filepaths = self.fetch_and_save_college_list()
         filepaths = self.fetch_and_save_department_lists(filepaths)
         self.fetch_and_save_department_applys(filepaths)
+
+        if Crawler.FAILED_URLS:
+            failed_log_path = self.result_dir / "failed_urls.txt"
+            with open(failed_log_path, "w", encoding="utf-8") as f:
+                for url in Crawler.FAILED_URLS:
+                    f.write(url + "\n")
+            logger.warning(f"{len(Crawler.FAILED_URLS)} URLs failed completely. Saved to: {failed_log_path}")
+
         self.generate_db()
 
         if show_message:
@@ -217,23 +227,34 @@ class Crawler:
         logger.info("DB Generation: done.")
 
     @classmethod
-    def get_page(cls, url: str, retry_s: float = 3.0) -> str | None:
-        """Get a certain web page."""
-        while True:
-            # try to get page content
-            try:
-                scraper = cloudscraper.create_scraper(delay=None, interpreter="js2py", allow_brotli=True, debug=False)
-                return scraper.get(url).content.decode("utf-8")
-            # somehow we cannot get the page content
-            except Exception as e:
-                err_msg = str(e)
-                logger.info(err_msg)
-                # HTTP error code
-                if err_msg.startswith("HTTP Error "):
-                    return None
+    def get_page(cls, url: str) -> str | None:
+        scraper = cloudscraper.create_scraper(
+            interpreter="js2py",
+            allow_brotli=True,
+            debug=False
+        )
 
-            # fail to fetch the page, let's sleep for a while
-            time.sleep(retry_s)
+        for attempt in range(1, 6):
+            try:
+                response = scraper.get(url, timeout=10, headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0 Safari/537.36"
+                })
+                content = response.content.decode("utf-8", errors="ignore")
+
+                if "<html" not in content.lower():
+                    logger.warning(f"Invalid HTML content from {url}")
+                    return ""
+
+                return content
+
+            except Exception as e:
+                if attempt == 5:
+                    logger.error(f"Failed to fetch {url} after {attempt} attempts: {e}")
+                    cls.FAILED_URLS.append(url)
+                    return None
+                sleep_time = min(3 * (2 ** (attempt - 1)), 30)
+                logger.info(f"Attempt {attempt} failed for {url}. Retrying in {sleep_time}s: {e}")
+                time.sleep(sleep_time)
 
     def write_file(self, filename: str | Path, content: str = "", *, encoding: str = "utf-8") -> None:
         """Write content to an external file."""
