@@ -14,14 +14,13 @@ from pyppeteer import launch
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import caac_package.functions as caac_funcs
-from caac_package.year import Year
 
 parser = argparse.ArgumentParser(description="An utility for looking up Univerisy Entrance result.")
 parser.add_argument(
     "--year",
     type=int,
-    default=Year.YEAR_CURRENT,
-    help="The year of data to be processed. (ex: 2017 or 106 is the same)",
+    default=None,
+    help="此參數已無效，年份自動從 data/crawler_XXXX 資料夾名稱取得。",
 )
 parser.add_argument(
     "--output",
@@ -30,7 +29,21 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-year = Year.taiwanize(args.year)
+# 自動從路徑中提取年份
+current_dir = os.path.dirname(__file__)
+project_root = os.path.abspath(os.path.join(current_dir, ".."))  # 回到專案根目錄
+data_dir = os.path.join(project_root, "data")
+
+# 找出 crawler_XXXX 的資料夾
+for folder in os.listdir(data_dir):
+    if folder.startswith("crawler_"):
+        year_str = folder.split("_")[-1]
+        if year_str.isdigit():
+            year = int(year_str)
+            break
+else:
+    raise FileNotFoundError("找不到以 crawler_ 開頭的資料夾！請確認 data/ 路徑下有 crawler_XXXX 的資料夾。")
+
 result_filepath = args.output if os.path.splitext(args.output)[1].lower() == ".xlsx" else args.output + ".xlsx"
 
 # variables
